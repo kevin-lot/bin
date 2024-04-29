@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+# Reset PhpStorm
+#rm -rf ~/.config/JetBrains/PhpStorm*/eval
+#cp ~/.config/JetBrains/PhpStorm*/options/other.xml ~/.config/JetBrains/PhpStorm*/options/other.xml.bck
+#sed -i -E 's/<property name=\"evl.*\".*\/>//' ~/.config/JetBrains/PhpStorm*/options/other.xml
+##rm -rf ~/.java/.userPrefs/prefs.xml
+##rm -rf ~/.java/.userPrefs/jetbrains/prefs.xml
+#rm -rf ~/.java/.userPrefs/jetbrains/phpstorm
+
+# Reset WebStorm
+#rm -rf ~/.config/JetBrains/WebStorm*/eval
+#cp ~/.config/JetBrains/WebStorm*/options/other.xml ~/.config/JetBrains/WebStorm*/options/other.xml.bck
+#sed -i -E 's/<property name=\"evl.*\".*\/>//' ~/.config/JetBrains/WebStorm*/options/other.xml
+##rm -rf ~/.java/.userPrefs/prefs.xml
+##rm -rf ~/.java/.userPrefs/jetbrains/prefs.xml
+#rm -rf ~/.java/.userPrefs/jetbrains/webstorm
+
+# Reset Intelij
+rm -rf ~/.config/JetBrains/WebStorm*/eval
+cp ~/.config/JetBrains/WebStorm*/options/other.xml ~/.config/JetBrains/WebStorm*/options/other.xml.bck
+sed -i -E 's/<property name=\"evl.*\".*\/>//' ~/.config/JetBrains/WebStorm*/options/other.xml
+#rm -rf ~/.java/.userPrefs/prefs.xml
+#rm -rf ~/.java/.userPrefs/jetbrains/prefs.xml
+rm -rf ~/.java/.userPrefs/jetbrains/webstorm

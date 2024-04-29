@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+set -o xtrace
+
+# don't cd before the line below
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+NAME="terraform switcher"
+echo "${NAME} install"
+echo "${NAME} actual version => $(tfswitch --version 2>/dev/null)"
+curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
+echo "${NAME} new version => $(tfswitch --version)"
+echo
+
+NAME="terraform tflint"
+echo "${NAME} install"
+echo "${NAME} actual version => $(tflint --version 2>/dev/null)"
+curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
+echo "${NAME} new version => $(tflint --version)"
+echo
+
+NAME="circleci cli"
+echo "${NAME} install"
+echo "${NAME} actual version => $(circleci version 2>/dev/null)"
+curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
+echo "${NAME} new version => $(circleci version)"
+echo
+
+NAME="nvm"
+echo "${NAME} install"
+echo "${NAME} actual version => $(nvm version 2>/dev/null)"
+LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+echo "${NAME} new version => $(circleci version)"
+echo
+
+(
+  cd "${SCRIPT_DIR}"
+
+  NAME="lazygit"
+  echo "${NAME} install"
+  echo "${NAME} actual version => $(lazygit --version 2>/dev/null)"
+  LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+  tar xf lazygit.tar.gz -C "${HOME}/bin" lazygit
+  rm -f lazygit.tar.gz
+  echo "${NAME} new version => $(lazygit --version)"
+  echo
+)
+
+(
+  cd "${SCRIPT_DIR}"
+
+  NAME="awscli"
+  echo "${NAME} install"
+  VERSION=$(awscli --version 2>/dev/null)
+  if [ $? --ne 0 ]; then SUFFIX_COMMAND=""; else SUFFIX_COMMAND="--update"; fi
+
+  echo "${NAME} actual version => ${VERSION}"
+  rm -rf awscliv2.zip &2>/dev/null
+  rm -rf tmp &2>/dev/null
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip -qq awscliv2.zip -d tmp
+  ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
+  rm -rf awscliv2.zip
+  rm -rf tmp
+)
+
+echo "ohmyzsh plugins"
+if [[ -n "${HOME}/.oh-my-zsh" ]]; then
+  git clone https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
+fi
+echo
+
+#echo "install apt packages"
+#apt update
+#apt install --yes \
+#    btop \
+#    build-essential \
+#    dconf-editor \
+#    git \
+#    gparted \
+#    gradle \
+#    jq \
+#    kazam \
+#    ncdu \
+#    neovim  \
+#    ngrok \
+#    nmap \
+#    openjdk-17-jre \
+#    rpi-imager \
+#    scrcpy \
+#    terminator \
+#    traceroute \
+#    xmlstarlet
+#echo
+
+# Python
+#python3 -m pip list -v
+#python3 -m pip install --user pipx --upgrade
+#python3 -m pipx ensurepath
+#python3 -m pipx install aws-mfa
+#python3 -m pipx upgrade aws-mfa
+#python3 -m pipx install jmespath
+#python3 -m pipx upgrade jmespath
+#python3 -m pipx install pipreqs
+#python3 -m pipx upgrade pipreqs
+#python3 -m pipx install poetry
+#python3 -m pipx upgrade poetry
+#python3 -m pipx install yamllint
+#python3 -m pipx upgrade yamllint
+#pip cache purge
+#poetry cache clear PyPI --all --quiet
+
+dart pub cache clean --force
+dart pub global activate fvm
+

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o xtrace
+
+docker rm -f $(docker ps -a -q) 2>/dev/null
+docker image rm -f $(docker image ls -a -q) 2>/dev/null
+docker system prune -f 2>/dev/null
