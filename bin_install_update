@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o xtrace
+#set -o xtrace
 
 draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 
@@ -45,43 +45,35 @@ install_awscli() {
     fi
 }
 install_circleci() {
-    if [[ ${OS} == 'macos' ]]; then
-        brew install circleci
-        return
-    fi
-
     echo "+++++++++ circleci install +++++++++"
     curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
 }
-install_fnm() {
-    if [[ ${OS} == 'macos' ]]; then
-        brew install fnm
-        return
-    fi
-
-    echo "+++++++++ fnm install +++++++++"
-    VERSION=$(fnm --version 2>/dev/null)
-    SUFFIX_COMMAND=""
-    if [[ -n ${VERSION} ]]; then SUFFIX_COMMAND="--skip-shell"; fi
-    curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "${HOME}/bin" ${SUFFIX_COMMAND}
-}
 install_lazygit() {
-    if [[ ${OS} == 'macos' ]]; then
-        brew install lazygit
-        return
-    fi
-
     echo "+++++++++ lazygit install +++++++++"
     (
         cd "${SCRIPT_DIR}" || exit 1
 
         LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
         rm -rf lazygit &>/dev/null
-        curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+        if [[ ${OS} == 'macos' ]]; then
+            curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
+        else
+            curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+        fi
         tar xzf lazygit.tar.gz lazygit
         chmod a+x lazygit
         rm -f lazygit.tar.gz &>/dev/null
     )
+}
+install_volta() {
+    echo "+++++++++ volta install +++++++++"
+    curl -fLSs https://get.volta.sh | bash -s -- --skip-setup
+
+    cat <<"EOF"
+    export VOLTA_HOME="$HOME/.volta"
+    export PATH="$PATH:$VOLTA_HOME/bin"
+    "$VOLTA_HOME/bin/volta" completions zsh --force --output "$ZSH_CACHE_DIR/completions/_volta" --quiet # need a restart of terminal
+EOF
 }
 install_fvm() {
     echo "+++++++++ fvm install +++++++++"
@@ -98,6 +90,13 @@ install_fvm() {
         ln -s "${HOME}/.fvm/fvm" fvm
         mkdir -p "${HOME}/.fvm/cache"
     )
+
+    cat <<"EOF"
+    [[ -d $HOME/.fvm/cache ]] && export FVM_CACHE_PATH="$HOME/.fvm/cache"
+    [[ -d $HOME/.fvm/cache/default/bin ]] && export PATH="$PATH:$HOME/.fvm/cache/default/bin"
+    [[ -d $HOME/.pub-cache/bin ]] && export PATH="$PATH:$HOME/.pub-cache/bin"
+    [[ -f $HOME/.dart-cli-completion/fvm.zsh ]] && source $HOME/.dart-cli-completion/fvm.zsh
+EOF
 }
 install_tflint() {
     if [[ ${OS} == 'macos' ]]; then
@@ -118,15 +117,28 @@ install_tfswitch() {
     curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
 }
 install_omz_plugins() {
-    if [[ -d "${HOME}/.oh-my-zsh" ]]; then
-        echo "+++++++++ ohmyzsh plugins install +++++++++"
+    echo "+++++++++ ohmyzsh plugins install +++++++++"
+    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then exit 1; fi
 
-        rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions" &>/dev/null
-        git clone https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions"
+    local PLUGINS_PATH="${HOME}/.oh-my-zsh/custom/plugins"
 
-        rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting" &>/dev/null
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
-    fi
+    rm -rf "${PLUGINS_PATH}/zsh-autosuggestions" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${PLUGINS_PATH}/zsh-autosuggestions"
+
+    rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${PLUGINS_PATH}/zsh-syntax-highlighting"
+}
+install_omz_theme() {
+    echo "+++++++++ ohmyzsh theme install +++++++++"
+    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then exit 1; fi
+
+    local THEMES_PATH="${HOME}/.oh-my-zsh/custom/themes"
+    rm -rf "${THEMES_PATH}/powerlevel10k" &>/dev/null
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${THEMES_PATH}/powerlevel10k"
+
+    cat <<"EOF"
+    ZSH_THEME="powerlevel10k/powerlevel10k"
+EOF
 }
 
 # install packages on linux
@@ -180,11 +192,12 @@ command -v git &>/dev/null || { echo "need git"; exit 1; }
 install_awscli
 install_circleci
 install_lazygit
-install_fnm
 install_fvm
 install_tflint
 install_tfswitch
+install_volta
 install_omz_plugins
+install_omz_theme
 
 draw_spacer
 
