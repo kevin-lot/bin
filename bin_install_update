@@ -2,117 +2,196 @@
 
 set -o xtrace
 
+draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
+
 # don't cd before the line below
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-NAME="terraform switcher"
-echo "${NAME} install"
-echo "${NAME} actual version => $(tfswitch --version 2>/dev/null)"
-curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
-echo "${NAME} new version => $(tfswitch --version)"
-echo
+# find os
+case "$(uname -s)" in
+  Linux*)  OS='linux';;
+  Darwin*) OS='macos';;
+  *)       echo "unsupported os"; exit 1;;
+esac
+case "$(uname -m)" in
+  x86_64)  ARCH='x64' ;;
+  arm64)   ARCH='arm64' ;;
+  armv7l)  ARCH='arm' ;;
+  *)       log_message "Unsupported architecture"; exit 1 ;;
+esac
 
-NAME="terraform tflint"
-echo "${NAME} install"
-echo "${NAME} actual version => $(tflint --version 2>/dev/null)"
-curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
-echo "${NAME} new version => $(tflint --version)"
-echo
+install_awscli() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install awscli
+        return
+    fi
 
-NAME="circleci cli"
-echo "${NAME} install"
-echo "${NAME} actual version => $(circleci version 2>/dev/null)"
-curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
-echo "${NAME} new version => $(circleci version)"
-echo
+    echo "+++++++++ awscli install +++++++++"
+    if [[ ${OS} == 'linux' ]]; then
+        (
+            cd "${SCRIPT_DIR}" || exit 1
 
-NAME="nvm"
-echo "${NAME} install"
-echo "${NAME} actual version => $(nvm version 2>/dev/null)"
-LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-echo "${NAME} new version => $(circleci version)"
-echo
+            VERSION=$(aws --version 2>/dev/null)
+            SUFFIX_COMMAND=""
+            if [[ -n "${VERSION}" ]]; then SUFFIX_COMMAND="--update"; fi
+            rm -rf awscliv2.zip &>/dev/null
+            rm -rf tmp &>/dev/null
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -qq awscliv2.zip -d tmp
+            ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
+            rm -rf awscliv2.zip &>/dev/null
+            rm -rf tmp &>/dev/null
+        )
+    fi
+}
+install_circleci() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install circleci
+        return
+    fi
 
-(
-  cd "${SCRIPT_DIR}"
+    echo "+++++++++ circleci install +++++++++"
+    curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
+}
+install_fnm() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install fnm
+        return
+    fi
 
-  NAME="lazygit"
-  echo "${NAME} install"
-  echo "${NAME} actual version => $(lazygit --version 2>/dev/null)"
-  LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-  tar xf lazygit.tar.gz -C "${HOME}/bin" lazygit
-  rm -f lazygit.tar.gz
-  echo "${NAME} new version => $(lazygit --version)"
-  echo
-)
+    echo "+++++++++ fnm install +++++++++"
+    VERSION=$(fnm --version 2>/dev/null)
+    SUFFIX_COMMAND=""
+    if [[ -n ${VERSION} ]]; then SUFFIX_COMMAND="--skip-shell"; fi
+    curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "${HOME}/bin" ${SUFFIX_COMMAND}
+}
+install_lazygit() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install lazygit
+        return
+    fi
 
-(
-  cd "${SCRIPT_DIR}"
+    echo "+++++++++ lazygit install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
 
-  NAME="awscli"
-  echo "${NAME} install"
-  VERSION=$(awscli --version 2>/dev/null)
-  if [ $? --ne 0 ]; then SUFFIX_COMMAND=""; else SUFFIX_COMMAND="--update"; fi
+        LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+        rm -rf lazygit &>/dev/null
+        curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+        tar xzf lazygit.tar.gz lazygit
+        chmod a+x lazygit
+        rm -f lazygit.tar.gz &>/dev/null
+    )
+}
+install_fvm() {
+    echo "+++++++++ fvm install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
 
-  echo "${NAME} actual version => ${VERSION}"
-  rm -rf awscliv2.zip &2>/dev/null
-  rm -rf tmp &2>/dev/null
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  unzip -qq awscliv2.zip -d tmp
-  ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
-  rm -rf awscliv2.zip
-  rm -rf tmp
-)
+        FVM_VERSION=$(curl -s https://api.github.com/repos/leoafarias/fvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        rm -rf fvm &>/dev/null
+        rm -rf "${HOME}/.fvm" &>/dev/null
+        curl -L "https://github.com/leoafarias/fvm/releases/download/$FVM_VERSION/fvm-$FVM_VERSION-$OS-$ARCH.tar.gz" -o fvm.tar.gz
+        tar xzf fvm.tar.gz
+        mv fvm "${HOME}/.fvm"
+        rm -rf fvm.tar.gz &>/dev/null
+        ln -s "${HOME}/.fvm/fvm" fvm
+        mkdir -p "${HOME}/.fvm/cache"
+    )
+}
+install_tflint() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install tflint
+        return
+    fi
 
-echo "ohmyzsh plugins"
-if [[ -n "${HOME}/.oh-my-zsh" ]]; then
-  git clone https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions"
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
+    echo "+++++++++ tflint install +++++++++"
+    curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
+}
+install_tfswitch() {
+    if [[ ${OS} == 'macos' ]]; then
+        brew install warrensbox/tap/tfswitch
+        return
+    fi
+
+    echo "+++++++++ tfswitch install +++++++++"
+    curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
+}
+install_omz_plugins() {
+    if [[ -d "${HOME}/.oh-my-zsh" ]]; then
+        echo "+++++++++ ohmyzsh plugins install +++++++++"
+
+        rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions" &>/dev/null
+        git clone https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions"
+
+        rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting" &>/dev/null
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
+    fi
+}
+
+# install packages on linux
+if [[ "${OS}" == 'linux' ]]; then
+    echo "+++++++++ install apt packages +++++++++"
+    apt update
+    apt install --yes \
+        btop \
+        build-essential \
+        dconf-editor \
+        git \
+        gparted \
+        gradle \
+        jq \
+        kazam \
+        ncdu \
+        neovim  \
+        ngrok \
+        nmap \
+        pipx \
+        rpi-imager \
+        scrcpy \
+        terminator \
+        traceroute \
+        xmlstarlet
 fi
-echo
+if [[ ${OS} == 'macos' ]]; then
+    # install brew on macos
+    if ! command -v brew &>/dev/null; then
+        echo "+++++++++ install brew +++++++++"
+        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
 
-#echo "install apt packages"
-#apt update
-#apt install --yes \
-#    btop \
-#    build-essential \
-#    dconf-editor \
-#    git \
-#    gparted \
-#    gradle \
-#    jq \
-#    kazam \
-#    ncdu \
-#    neovim  \
-#    ngrok \
-#    nmap \
-#    openjdk-17-jre \
-#    rpi-imager \
-#    scrcpy \
-#    terminator \
-#    traceroute \
-#    xmlstarlet
-#echo
+        echo "relaunch the terminal then the script";
+        exit 1;
+    fi
 
-# Python
-#python3 -m pip list -v
-#python3 -m pip install --user pipx --upgrade
-#python3 -m pipx ensurepath
-#python3 -m pipx install aws-mfa
-#python3 -m pipx upgrade aws-mfa
-#python3 -m pipx install jmespath
-#python3 -m pipx upgrade jmespath
-#python3 -m pipx install pipreqs
-#python3 -m pipx upgrade pipreqs
-#python3 -m pipx install poetry
-#python3 -m pipx upgrade poetry
-#python3 -m pipx install yamllint
-#python3 -m pipx upgrade yamllint
-#pip cache purge
-#poetry cache clear PyPI --all --quiet
+    brew install btop
+    brew install jq
+    brew install ncdu
+    brew install neovim
+    brew install --cask ngrok
+    brew install nmap
+    brew install pipx
+    brew install scrcpy
+    brew install xmlstarlet
+fi
 
-dart pub cache clean --force
-dart pub global activate fvm
+draw_spacer
+command -v git &>/dev/null || { echo "need git"; exit 1; }
 
+install_awscli
+install_circleci
+install_lazygit
+install_fnm
+install_fvm
+install_tflint
+install_tfswitch
+install_omz_plugins
+
+draw_spacer
+
+python3 -m pipx list
+python3 -m pipx ensurepath
+python3 -m pipx upgrade-all
+! command -v awslocal &>/dev/null && python3 -m pipx install awscli-local
+! command -v aws-mfa &>/dev/null && python3 -m pipx install aws-mfa
+! command -v jp.py &>/dev/null && python3 -m pipx install jmespath
+! command -v yamllint &>/dev/null && python3 -m pipx install yamllint

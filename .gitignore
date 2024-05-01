@@ -1,3 +1,12 @@
 .idea
+
+# symbolic links created from bin_install_update
 aws
 aws_completer
+fvm
+
+# programs installed with bin_install_update
+circleci
+lazygit
+tflint
+tfswitch
