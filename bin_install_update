@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-#set -o xtrace
+set -o xtrace -o errexit
 
 draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 
 # don't cd before the line below
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+MATCH_SEMVER_1='s/.*v([^v].+)".*/\1/' # match when semver starts with the letter "v"
+MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the letter "v"
 
 # find os
 case "$(uname -s)" in
@@ -36,7 +39,7 @@ install_awscli() {
             if [[ -n "${VERSION}" ]]; then SUFFIX_COMMAND="--update"; fi
             rm -rf awscliv2.zip &>/dev/null
             rm -rf tmp &>/dev/null
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            curl -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
             unzip -qq awscliv2.zip -d tmp
             ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
             rm -rf awscliv2.zip &>/dev/null
@@ -53,12 +56,12 @@ install_lazygit() {
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
         rm -rf lazygit &>/dev/null
         if [[ ${OS} == 'macos' ]]; then
-            curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
         else
-            curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
         fi
         tar xzf lazygit.tar.gz lazygit
         chmod a+x lazygit
@@ -75,15 +78,38 @@ install_volta() {
     "$VOLTA_HOME/bin/volta" completions zsh --force --output "$ZSH_CACHE_DIR/completions/_volta" --quiet # need a restart of terminal
 EOF
 }
+install_terragrunt() {
+    echo "+++++++++ terragrunt install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
+
+        TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
+        rm -rf terragrunt &>/dev/null
+        if [[ ${OS} == 'macos' ]]; then
+            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_darwin_arm64" -o terragrunt
+        else
+            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
+        fi
+        chmod a+x terragrunt
+    )
+
+    cat <<"EOF"
+    [[ -d "$TERRAGRUNT_PATH" ]] && complete -o nospace -C "$TERRAGRUNT_PATH" terragrunt
+EOF
+}
 install_fvm() {
     echo "+++++++++ fvm install +++++++++"
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        FVM_VERSION=$(curl -s https://api.github.com/repos/leoafarias/fvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        FVM_VERSION=$(curl -fLSs https://api.github.com/repos/leoafarias/fvm/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf fvm &>/dev/null
         rm -rf "${HOME}/.fvm" &>/dev/null
-        curl -L "https://github.com/leoafarias/fvm/releases/download/$FVM_VERSION/fvm-$FVM_VERSION-$OS-$ARCH.tar.gz" -o fvm.tar.gz
+        if [[ ${OS} == 'macos' ]]; then
+            curl -fLSs "https://github.com/leoafarias/fvm/releases/download/${FVM_VERSION}/fvm-${FVM_VERSION}-macos-arm64.tar.gz" -o fvm.tar.gz
+        else
+            curl -fLSs "https://github.com/leoafarias/fvm/releases/download/${FVM_VERSION}/fvm-${FVM_VERSION}-linux-x64.tar.gz" -o fvm.tar.gz
+        fi
         tar xzf fvm.tar.gz
         mv fvm "${HOME}/.fvm"
         rm -rf fvm.tar.gz &>/dev/null
@@ -125,7 +151,7 @@ install_omz_plugins() {
     rm -rf "${PLUGINS_PATH}/zsh-autosuggestions" &>/dev/null
     git clone https://github.com/zsh-users/zsh-autosuggestions.git "${PLUGINS_PATH}/zsh-autosuggestions"
 
-    rm -rf "${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting" &>/dev/null
+    rm -rf "${PLUGINS_PATH}/zsh-syntax-highlighting" &>/dev/null
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${PLUGINS_PATH}/zsh-syntax-highlighting"
 }
 install_omz_theme() {
@@ -175,15 +201,18 @@ if [[ ${OS} == 'macos' ]]; then
         exit 1;
     fi
 
-    brew install btop
-    brew install jq
-    brew install ncdu
-    brew install neovim
-    brew install --cask ngrok
-    brew install nmap
-    brew install pipx
-    brew install scrcpy
-    brew install xmlstarlet
+    brew update
+    brew install \
+        btop \
+        gradle \
+        jq \
+        ncdu \
+        neovim \
+        ngrok/ngrok/ngrok \
+        nmap \
+        pipx \
+        scrcpy \
+        xmlstarlet
 fi
 
 draw_spacer
@@ -201,10 +230,10 @@ install_omz_theme
 
 draw_spacer
 
-python3 -m pipx list
-python3 -m pipx ensurepath
-python3 -m pipx upgrade-all
-! command -v awslocal &>/dev/null && python3 -m pipx install awscli-local
-! command -v aws-mfa &>/dev/null && python3 -m pipx install aws-mfa
-! command -v jp.py &>/dev/null && python3 -m pipx install jmespath
-! command -v yamllint &>/dev/null && python3 -m pipx install yamllint
+pipx ensurepath
+pipx list
+pipx upgrade-all
+! command -v awslocal &>/dev/null && pipx install awscli-local
+! command -v aws-mfa &>/dev/null && pipx install aws-mfa
+! command -v jp.py &>/dev/null && pipx install jmespath
+! command -v yamllint &>/dev/null && pipx install yamllint
