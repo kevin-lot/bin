@@ -12,15 +12,15 @@ MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the lette
 
 # find os
 case "$(uname -s)" in
-  Linux*)  OS='linux';;
   Darwin*) OS='macos';;
+  Linux*)  OS='linux';;
   *)       echo "unsupported os"; exit 1;;
 esac
 case "$(uname -m)" in
-  x86_64)  ARCH='x64' ;;
   arm64)   ARCH='arm64' ;;
   armv7l)  ARCH='arm' ;;
-  *)       log_message "Unsupported architecture"; exit 1 ;;
+  x86_64)  ARCH='x64' ;;
+  *)       echo "Unsupported architecture"; exit 1 ;;
 esac
 
 install_awscli() {
@@ -206,6 +206,7 @@ if [[ ${OS} == 'macos' ]]; then
         btop \
         gradle \
         jq \
+        libpq \
         ncdu \
         neovim \
         ngrok/ngrok/ngrok \
@@ -213,6 +214,8 @@ if [[ ${OS} == 'macos' ]]; then
         pipx \
         scrcpy \
         xmlstarlet
+
+    brew link --force libpq
 fi
 
 draw_spacer
