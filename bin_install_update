@@ -226,6 +226,7 @@ install_awscli
 install_circleci
 install_lazygit
 install_fvm
+install_terragrunt
 install_tflint
 install_tfswitch
 install_volta
