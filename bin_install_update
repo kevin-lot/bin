@@ -204,13 +204,14 @@ if [[ ${OS} == 'macos' ]]; then
     brew update
     brew install \
         btop \
-        gradle \
+        gnupg \
         jq \
         libpq \
         ncdu \
         neovim \
         ngrok/ngrok/ngrok \
         nmap \
+        pinentry-mac \
         pipx \
         scrcpy \
         xmlstarlet
