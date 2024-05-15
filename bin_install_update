@@ -78,25 +78,6 @@ install_volta() {
     "$VOLTA_HOME/bin/volta" completions zsh --force --output "$ZSH_CACHE_DIR/completions/_volta" --quiet # need a restart of terminal
 EOF
 }
-install_terragrunt() {
-    echo "+++++++++ terragrunt install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-
-        TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
-        rm -rf terragrunt &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
-            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_darwin_arm64" -o terragrunt
-        else
-            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
-        fi
-        chmod a+x terragrunt
-    )
-
-    cat <<"EOF"
-    [[ -d "$TERRAGRUNT_PATH" ]] && complete -o nospace -C "$TERRAGRUNT_PATH" terragrunt
-EOF
-}
 install_fvm() {
     echo "+++++++++ fvm install +++++++++"
     (
@@ -122,6 +103,42 @@ install_fvm() {
     [[ -d $HOME/.fvm/cache/default/bin ]] && export PATH="$PATH:$HOME/.fvm/cache/default/bin"
     [[ -d $HOME/.pub-cache/bin ]] && export PATH="$PATH:$HOME/.pub-cache/bin"
     [[ -f $HOME/.dart-cli-completion/fvm.zsh ]] && source $HOME/.dart-cli-completion/fvm.zsh
+EOF
+}
+install_terraform_docs() {
+    echo "+++++++++ fvm install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
+
+        TERRAFORM_DOCS_VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
+        rm -rf terraform-docs &>/dev/null
+        if [[ ${OS} == 'macos' ]]; then
+            curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-darwin-arm64.tar.gz" -o terraform-docs.tar.gz
+        else
+            curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
+        fi
+        tar xzf terraform-docs.tar.gz terraform-docs
+        chmod +x terraform-docs
+        tar -xzf terraform-docs.tar.gz
+    )
+}
+install_terragrunt() {
+    echo "+++++++++ terragrunt install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
+
+        TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
+        rm -rf terragrunt &>/dev/null
+        if [[ ${OS} == 'macos' ]]; then
+            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_darwin_arm64" -o terragrunt
+        else
+            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
+        fi
+        chmod a+x terragrunt
+    )
+
+    cat <<"EOF"
+    [[ -d "$TERRAGRUNT_PATH" ]] && complete -o nospace -C "$TERRAGRUNT_PATH" terragrunt
 EOF
 }
 install_tflint() {
@@ -226,6 +243,7 @@ install_awscli
 install_circleci
 install_lazygit
 install_fvm
+install_terraform_docs
 install_terragrunt
 install_tflint
 install_tfswitch
