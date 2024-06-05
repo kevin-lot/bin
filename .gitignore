@@ -10,6 +10,7 @@ terraform
 # programs installed with bin_install_update
 circleci
 lazygit
+terraform-docs
 terragrunt
 tflint
 tfswitch

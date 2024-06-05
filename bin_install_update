@@ -119,7 +119,7 @@ install_terraform_docs() {
         fi
         tar xzf terraform-docs.tar.gz terraform-docs
         chmod +x terraform-docs
-        tar -xzf terraform-docs.tar.gz
+        rm -rf terraform-docs.tar.gz &>/dev/null
     )
 }
 install_terragrunt() {
