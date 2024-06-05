@@ -106,7 +106,7 @@ install_fvm() {
 EOF
 }
 install_terraform_docs() {
-    echo "+++++++++ fvm install +++++++++"
+    echo "+++++++++ terraform docs install +++++++++"
     (
         cd "${SCRIPT_DIR}" || exit 1
 
