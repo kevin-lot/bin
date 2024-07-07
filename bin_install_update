@@ -182,6 +182,9 @@ install_omz_plugins() {
 
     rm -rf "${PLUGINS_PATH}/zsh-syntax-highlighting" &>/dev/null
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${PLUGINS_PATH}/zsh-syntax-highlighting"
+
+    rm -rf "${PLUGINS_PATH}/zsh-completions" &>/dev/null
+    git clone --depth=1 https://github.com/zsh-users/zsh-completions "${PLUGINS_PATH}/zsh-completions"
 }
 install_omz_theme() {
     echo "+++++++++ ohmyzsh theme install +++++++++"
