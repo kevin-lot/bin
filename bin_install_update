@@ -233,6 +233,8 @@ if [[ ${OS} == 'macos' ]]; then
         exit 1;
     fi
 
+#        ngrok/ngrok/ngrok \
+#        nmap \
     brew update
     brew install \
         btop \
@@ -241,8 +243,6 @@ if [[ ${OS} == 'macos' ]]; then
         libpq \
         ncdu \
         neovim \
-        ngrok/ngrok/ngrok \
-        nmap \
         pinentry-mac \
         pipx \
         scrcpy \
