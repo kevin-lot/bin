@@ -24,50 +24,33 @@ esac
 draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 
 install_awscli() {
+    echo "+++++++++ awscli install +++++++++"
+
     if [[ ${OS} == 'macos' ]]; then
         brew install awscli
         return
     fi
 
-    echo "+++++++++ awscli install +++++++++"
-    if [[ ${OS} == 'linux' ]]; then
-        (
-            cd "${SCRIPT_DIR}" || exit 1
+    # linux
+    (
+        cd "${SCRIPT_DIR}" || exit 1
 
-            VERSION=$(aws --version 2>/dev/null)
-            SUFFIX_COMMAND=""
-            if [[ -n "${VERSION}" ]]; then SUFFIX_COMMAND="--update"; fi
-            rm -rf awscliv2.zip &>/dev/null
-            rm -rf tmp &>/dev/null
-            curl -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
-            unzip -qq awscliv2.zip -d tmp
-            ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
-            rm -rf awscliv2.zip &>/dev/null
-            rm -rf tmp &>/dev/null
-        )
-    fi
+        VERSION=$(aws --version 2>/dev/null)
+        SUFFIX_COMMAND=""
+        if [[ -n "${VERSION}" ]]; then SUFFIX_COMMAND="--update"; fi
+        rm -rf awscliv2.zip &>/dev/null
+        rm -rf tmp &>/dev/null
+        curl -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+        unzip -qq awscliv2.zip -d tmp
+        ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
+        rm -rf awscliv2.zip &>/dev/null
+        rm -rf tmp &>/dev/null
+    )
 }
 install_circleci() {
     echo "+++++++++ circleci install +++++++++"
     (
         curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
-    )
-}
-install_lazygit() {
-    echo "+++++++++ lazygit install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-
-        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
-        rm -rf lazygit &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
-        else
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
-        fi
-        tar xzf lazygit.tar.gz lazygit
-        chmod a+x lazygit
-        rm -f lazygit.tar.gz &>/dev/null
     )
 }
 install_fvm() {
@@ -98,6 +81,23 @@ install_fvm() {
     alias dart="fvm dart"
     alias flutter="fvm flutter"
 EOF
+}
+install_lazygit() {
+    echo "+++++++++ lazygit install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
+
+        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
+        rm -rf lazygit &>/dev/null
+        if [[ ${OS} == 'macos' ]]; then
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
+        else
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+        fi
+        tar xzf lazygit.tar.gz lazygit
+        chmod a+x lazygit
+        rm -f lazygit.tar.gz &>/dev/null
+    )
 }
 install_mise() {
     echo "+++++++++ mise install +++++++++"
@@ -211,7 +211,6 @@ if [[ "${OS}" == 'linux' ]]; then
         gparted \
         gradle \
         jq \
-        kazam \
         ncdu \
         neovim  \
         ngrok \
