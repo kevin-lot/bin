@@ -242,6 +242,7 @@ if [[ ${OS} == 'macos' ]]; then
         libpq \
         ncdu \
         neovim \
+        python3-pip \
         pinentry-mac \
         pipx \
         scrcpy \
