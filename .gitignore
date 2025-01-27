@@ -14,3 +14,11 @@ terraform-docs
 terragrunt
 tflint
 tfswitch
+
+# programs that can be installed from an other way
+docker
+docker-compose
+docker-credential-osxkeychain
+kubectl
+orb
+orbctl
