@@ -4,7 +4,6 @@
 # symbolic links created from bin_install_update
 aws
 aws_completer
-fvm
 terraform
 
 # programs installed with bin_install_update

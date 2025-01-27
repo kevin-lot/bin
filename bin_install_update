@@ -54,32 +54,8 @@ install_circleci() {
     )
 }
 install_fvm() {
-    echo "+++++++++ fvm install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-
-        FVM_VERSION=$(curl -fLSs https://api.github.com/repos/leoafarias/fvm/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
-        rm -rf fvm &>/dev/null
-        rm -rf "${HOME}/.fvm" &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
-            curl -fLSs "https://github.com/leoafarias/fvm/releases/download/${FVM_VERSION}/fvm-${FVM_VERSION}-macos-arm64.tar.gz" -o fvm.tar.gz
-        else
-            curl -fLSs "https://github.com/leoafarias/fvm/releases/download/${FVM_VERSION}/fvm-${FVM_VERSION}-linux-x64.tar.gz" -o fvm.tar.gz
-        fi
-        tar xzf fvm.tar.gz
-        mv fvm "${HOME}/.fvm"
-        rm -rf fvm.tar.gz &>/dev/null
-        ln -s "${HOME}/.fvm/fvm" fvm
-        mkdir -p "${HOME}/.fvm/cache"
-    )
-
     cat <<"EOF"
-    [[ -d "$HOME/.fvm/cache" ]] && export FVM_CACHE_PATH="$HOME/.fvm/cache"
-    [[ -d "$HOME/.fvm/cache/default/bin" ]] && export PATH="$HOME/.fvm/cache/default/bin:$PATH"
     [[ -d "$HOME/.pub-cache/bin" ]] && export PATH="$HOME/.pub-cache/bin:$PATH"
-    [[ -f "$HOME/.dart-cli-completion/fvm.zsh" ]] && source "$HOME/.dart-cli-completion/fvm.zsh"
-    alias dart="fvm dart"
-    alias flutter="fvm flutter"
 EOF
 }
 install_lazygit() {
