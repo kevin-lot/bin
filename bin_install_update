@@ -10,14 +10,14 @@ MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the lette
 
 # find os
 case "$(uname -s)" in
-  Darwin*) OS='macos';;
-  Linux*)  OS='linux';;
+  Darwin*) OS="macos";;
+  Linux*)  OS="linux";;
   *)       echo "unsupported os"; exit 1;;
 esac
 case "$(uname -m)" in
-  arm64)   ARCH='arm64' ;;
-  armv7l)  ARCH='arm' ;;
-  x86_64)  ARCH='x64' ;;
+  arm64)   ARCH="arm64" ;;
+  armv7l)  ARCH="arm" ;;
+  x86_64)  ARCH="x64" ;;
   *)       echo "Unsupported architecture"; exit 1 ;;
 esac
 
@@ -26,7 +26,7 @@ draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 install_awscli() {
     echo "+++++++++ awscli install +++++++++"
 
-    if [[ ${OS} == 'macos' ]]; then
+    if [[ "${OS}" == "macos" ]]; then
         brew install awscli
         return
     fi
@@ -35,9 +35,8 @@ install_awscli() {
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        VERSION=$(aws --version 2>/dev/null)
         SUFFIX_COMMAND=""
-        if [[ -n "${VERSION}" ]]; then SUFFIX_COMMAND="--update"; fi
+        if command -v aws &>/dev/null; then SUFFIX_COMMAND="--update"; fi
         rm -rf awscliv2.zip &>/dev/null
         rm -rf tmp &>/dev/null
         curl -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
@@ -55,6 +54,7 @@ install_circleci() {
 }
 install_fvm() {
     cat <<"EOF"
+    [[ -d "$HOME/Softwares/flutter/bin"]] && export PATH="$HOME/Softwares/flutter/bin:$PATH"
     [[ -d "$HOME/.pub-cache/bin" ]] && export PATH="$HOME/.pub-cache/bin:$PATH"
 EOF
 }
@@ -65,7 +65,7 @@ install_lazygit() {
 
         LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
         rm -rf lazygit &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
+        if [[ "${OS}" == "macos" ]]; then
             curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
         else
             curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
@@ -80,7 +80,7 @@ install_mise() {
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        if [[ ${OS} == 'macos' ]]; then
+        if [[ "${OS}" == "macos" ]]; then
             curl https://mise.jdx.dev/mise-latest-macos-arm64 > ./mise
         else
             curl https://mise.jdx.dev/mise-latest-linux-x64 > ./mise
@@ -100,7 +100,7 @@ install_terraform_docs() {
 
         TERRAFORM_DOCS_VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terraform-docs &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
+        if [[ "${OS}" == "macos" ]]; then
             curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-darwin-arm64.tar.gz" -o terraform-docs.tar.gz
         else
             curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
@@ -117,7 +117,7 @@ install_terragrunt() {
 
         TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terragrunt &>/dev/null
-        if [[ ${OS} == 'macos' ]]; then
+        if [[ "${OS}" == "macos" ]]; then
             curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_darwin_arm64" -o terragrunt
         else
             curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
@@ -130,7 +130,7 @@ install_terragrunt() {
 EOF
 }
 install_tflint() {
-    if [[ ${OS} == 'macos' ]]; then
+    if [[ "${OS}" == "macos" ]]; then
         brew install tflint
         return
     fi
@@ -139,7 +139,7 @@ install_tflint() {
     curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
 }
 install_tfswitch() {
-    if [[ ${OS} == 'macos' ]]; then
+    if [[ "${OS}" == "macos" ]]; then
         brew install warrensbox/tap/tfswitch
         return
     fi
@@ -176,29 +176,38 @@ EOF
 }
 
 # install packages on linux
-if [[ "${OS}" == 'linux' ]]; then
+if [[ "${OS}" == "linux" ]]; then
     echo "+++++++++ install apt packages +++++++++"
     apt update
+    # common
     apt install --yes \
+        bat \
         btop \
-        build-essential \
-        dconf-editor \
         git \
-        gparted \
-        gradle \
         jq \
         ncdu \
         neovim  \
-        ngrok \
         nmap \
         pipx \
-        rpi-imager \
+        python3 \
         scrcpy \
+        xmlstarlet \
+        yq \
+        zoxide
+    # common with diff name
+    apt install --yes \
+        git-delta \
+        ngrok
+    # linux only
+    apt install --yes \
+        build-essential \
+        dconf-editor \
+        gparted \
+        rpi-imager \
         terminator \
-        traceroute \
-        xmlstarlet
+        traceroute
 fi
-if [[ ${OS} == 'macos' ]]; then
+if [[ "${OS}" == "macos" ]]; then
     # install brew on macos
     if ! command -v brew &>/dev/null; then
         echo "+++++++++ install brew +++++++++"
@@ -207,24 +216,31 @@ if [[ ${OS} == 'macos' ]]; then
         echo "relaunch the terminal then the script";
         exit 1;
     fi
-
-#        ngrok/ngrok/ngrok \
-#        nmap \
     brew update
+    # common
     brew install \
+        bat \
         btop \
-        gnupg \
+        git \
         jq \
-        libpq \
         ncdu \
         neovim \
-        python3-pip \
-        pinentry-mac \
         pipx \
+        python3 \
         scrcpy \
-        xmlstarlet
-
-    brew link --force libpq
+        xmlstarlet \
+        yq \
+        zoxide
+        # nmap \
+    # common with diff name
+    brew install \
+        delta
+        # ngrok/ngrok/ngrok \
+    # macos only
+    brew install \
+        colima\
+        docker \
+        docker-compose
 fi
 
 draw_spacer
