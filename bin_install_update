@@ -95,16 +95,17 @@ EOF
 }
 install_terraform_docs() {
     echo "+++++++++ terraform docs install +++++++++"
+    if [[ "${OS}" == "macos" ]]; then
+        brew install terraform-docs
+        return
+    fi
+
     (
         cd "${SCRIPT_DIR}" || exit 1
 
         TERRAFORM_DOCS_VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terraform-docs &>/dev/null
-        if [[ "${OS}" == "macos" ]]; then
-            curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-darwin-arm64.tar.gz" -o terraform-docs.tar.gz
-        else
-            curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
-        fi
+        curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
         tar xzf terraform-docs.tar.gz terraform-docs
         chmod +x terraform-docs
         rm -rf terraform-docs.tar.gz &>/dev/null
@@ -112,16 +113,17 @@ install_terraform_docs() {
 }
 install_terragrunt() {
     echo "+++++++++ terragrunt install +++++++++"
+    if [[ "${OS}" == "macos" ]]; then
+        brew install terragrunt
+        return
+    fi
+
     (
         cd "${SCRIPT_DIR}" || exit 1
 
         TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terragrunt &>/dev/null
-        if [[ "${OS}" == "macos" ]]; then
-            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_darwin_arm64" -o terragrunt
-        else
-            curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
-        fi
+        curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
         chmod a+x terragrunt
     )
 
@@ -183,6 +185,7 @@ if [[ "${OS}" == "linux" ]]; then
     apt install --yes \
         bat \
         btop \
+        fzf \
         git \
         jq \
         ncdu \
@@ -221,6 +224,7 @@ if [[ "${OS}" == "macos" ]]; then
     brew install \
         bat \
         btop \
+        fzf \
         git \
         jq \
         ncdu \
@@ -237,10 +241,10 @@ if [[ "${OS}" == "macos" ]]; then
         delta
         # ngrok/ngrok/ngrok \
     # macos only
-    brew install \
-        colima\
-        docker \
-        docker-compose
+#    brew install \
+#        colima\
+#        docker \
+#        docker-compose
 fi
 
 draw_spacer
