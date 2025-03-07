@@ -7,6 +7,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 MATCH_SEMVER_1='s/.*v([^v].+)".*/\1/' # match when semver starts with the letter "v"
 MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the letter "v"
+ZSH_PATH="${HOME}/.zsh"
 
 # find os
 case "$(uname -s)" in
@@ -63,8 +64,8 @@ install_lazygit() {
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
         rm -rf lazygit &>/dev/null
+        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
         if [[ "${OS}" == "macos" ]]; then
             curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
         else
@@ -149,29 +150,29 @@ install_tfswitch() {
     echo "+++++++++ tfswitch install +++++++++"
     curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
 }
-install_omz_plugins() {
+install_zsh_plugins() {
     echo "+++++++++ zsh plugins install +++++++++"
+    local INSTALL_PATH=""
 
-    local ZSH_PATH="${HOME}/.zsh"
-    rm -rf "${ZSH_PATH}/zsh-autosuggestions" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${ZSH_PATH}/zsh-autosuggestions"
+    INSTALL_PATH="${ZSH_PATH}/zsh-autosuggestions"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${INSTALL_PATH}"
 
-    rm -rf "${ZSH_PATH}/zsh-syntax-highlighting" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_PATH}/zsh-syntax-highlighting"
+    INSTALL_PATH="${ZSH_PATH}/zsh-syntax-highlighting"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${INSTALL_PATH}"
 
-    rm -rf "${ZSH_PATH}/zsh-completions" &>/dev/null
-    git clone --depth=1 https://github.com/zsh-users/zsh-completions "${ZSH_PATH}/zsh-completions"
+    INSTALL_PATH="${ZSH_PATH}/zsh-history-substring-search"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
 }
-install_omz_theme() {
+install_zsh_theme() {
     echo "+++++++++ zsh theme install +++++++++"
 
-    local ZSH_PATH="${HOME}/.zsh"
-    rm -rf "${ZSH_PATH}/powerlevel10k" &>/dev/null
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_PATH}/powerlevel10k"
-
-    cat <<"EOF"
-    ZSH_THEME="powerlevel10k/powerlevel10k"
-EOF
+    local INSTALL_PATH=""
+    INSTALL_PATH="${ZSH_PATH}/powerlevel10k"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${INSTALL_PATH}"
 }
 
 # install packages on linux
@@ -192,8 +193,7 @@ if [[ "${OS}" == "linux" ]]; then
         python3 \
         scrcpy \
         xmlstarlet \
-        yq \
-        zoxide
+        yq
     # common with diff name
     apt install --yes \
         git-delta \
@@ -230,8 +230,7 @@ if [[ "${OS}" == "macos" ]]; then
         python3 \
         scrcpy \
         xmlstarlet \
-        yq \
-        zoxide
+        yq
         # nmap \
     # common with diff name
     brew install \
@@ -252,8 +251,8 @@ install_circleci
 install_fvm
 install_lazygit
 install_mise
-install_omz_plugins
-install_omz_theme
+install_zsh_plugins
+install_zsh_theme
 install_terraform_docs
 install_terragrunt
 install_tflint
