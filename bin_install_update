@@ -8,26 +8,14 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 MATCH_SEMVER_1='s/.*v([^v].+)".*/\1/' # match when semver starts with the letter "v"
 MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the letter "v"
 ZSH_PATH="${HOME}/.zsh"
-
-# find os
-case "$(uname -s)" in
-  Darwin*) OS="macos";;
-  Linux*)  OS="linux";;
-  *)       echo "unsupported os"; exit 1;;
-esac
-case "$(uname -m)" in
-  arm64)   ARCH="arm64" ;;
-  armv7l)  ARCH="arm" ;;
-  x86_64)  ARCH="x64" ;;
-  *)       echo "Unsupported architecture"; exit 1 ;;
-esac
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 
 install_awscli() {
     echo "+++++++++ awscli install +++++++++"
 
-    if [[ "${OS}" == "macos" ]]; then
+    if [[ "${OS}" == "darwin" ]]; then
         brew install awscli
         return
     fi
@@ -53,23 +41,36 @@ install_circleci() {
         curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
     )
 }
-install_fvm() {
-    cat <<"EOF"
-    [[ -d "$HOME/Softwares/flutter/bin"]] && export PATH="$HOME/Softwares/flutter/bin:$PATH"
-    [[ -d "$HOME/.pub-cache/bin" ]] && export PATH="$HOME/.pub-cache/bin:$PATH"
-EOF
+install_fzf() {
+    echo "+++++++++ fzf install +++++++++"
+    (
+        cd "${SCRIPT_DIR}" || exit 1
+        local VERSION
+
+        rm -rf fzf &>/dev/null
+        VERSION=$(curl -fLSs https://api.github.com/repos/junegunn/fzf/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
+        if [[ "${OS}" == "darwin" ]]; then
+            curl -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-darwin_arm64.tar.gz" -o fzf.tar.gz
+        else
+            curl -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz" -o fzf.tar.gz
+        fi
+        tar xzf fzf.tar.gz fzf
+        chmod a+x fzf
+        rm -f fzf.tar.gz &>/dev/null
+    )
 }
 install_lazygit() {
     echo "+++++++++ lazygit install +++++++++"
     (
         cd "${SCRIPT_DIR}" || exit 1
+        local VERSION
 
         rm -rf lazygit &>/dev/null
-        LAZYGIT_VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
-        if [[ "${OS}" == "macos" ]]; then
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
+        VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
+        if [[ "${OS}" == "darwin" ]]; then
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
         else
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
         fi
         tar xzf lazygit.tar.gz lazygit
         chmod a+x lazygit
@@ -81,7 +82,7 @@ install_mise() {
     (
         cd "${SCRIPT_DIR}" || exit 1
 
-        if [[ "${OS}" == "macos" ]]; then
+        if [[ "${OS}" == "darwin" ]]; then
             curl https://mise.jdx.dev/mise-latest-macos-arm64 > ./mise
         else
             curl https://mise.jdx.dev/mise-latest-linux-x64 > ./mise
@@ -96,17 +97,18 @@ EOF
 }
 install_terraform_docs() {
     echo "+++++++++ terraform docs install +++++++++"
-    if [[ "${OS}" == "macos" ]]; then
+    if [[ "${OS}" == "darwin" ]]; then
         brew install terraform-docs
         return
     fi
 
     (
         cd "${SCRIPT_DIR}" || exit 1
+        local VERSION
 
-        TERRAFORM_DOCS_VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
+        VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terraform-docs &>/dev/null
-        curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
+        curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${VERSION}/terraform-docs-${VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
         tar xzf terraform-docs.tar.gz terraform-docs
         chmod +x terraform-docs
         rm -rf terraform-docs.tar.gz &>/dev/null
@@ -114,17 +116,18 @@ install_terraform_docs() {
 }
 install_terragrunt() {
     echo "+++++++++ terragrunt install +++++++++"
-    if [[ "${OS}" == "macos" ]]; then
+    if [[ "${OS}" == "darwin" ]]; then
         brew install terragrunt
         return
     fi
 
     (
         cd "${SCRIPT_DIR}" || exit 1
+        local VERSION
 
-        TERRAGRUNT_VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
+        VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
         rm -rf terragrunt &>/dev/null
-        curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o terragrunt
+        curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/terragrunt_linux_amd64" -o terragrunt
         chmod a+x terragrunt
     )
 
@@ -133,7 +136,7 @@ install_terragrunt() {
 EOF
 }
 install_tflint() {
-    if [[ "${OS}" == "macos" ]]; then
+    if [[ "${OS}" == "darwin" ]]; then
         brew install tflint
         return
     fi
@@ -142,7 +145,7 @@ install_tflint() {
     curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
 }
 install_tfswitch() {
-    if [[ "${OS}" == "macos" ]]; then
+    if [[ "${OS}" == "darwin" ]]; then
         brew install warrensbox/tap/tfswitch
         return
     fi
@@ -183,7 +186,6 @@ if [[ "${OS}" == "linux" ]]; then
     apt install --yes \
         bat \
         btop \
-        fzf \
         git \
         jq \
         ncdu \
@@ -207,7 +209,7 @@ if [[ "${OS}" == "linux" ]]; then
         terminator \
         traceroute
 fi
-if [[ "${OS}" == "macos" ]]; then
+if [[ "${OS}" == "darwin" ]]; then
     # install brew on macos
     if ! command -v brew &>/dev/null; then
         echo "+++++++++ install brew +++++++++"
@@ -217,11 +219,11 @@ if [[ "${OS}" == "macos" ]]; then
         exit 1;
     fi
     brew update
+    brew upgrade
     # common
     brew install \
         bat \
         btop \
-        fzf \
         git \
         jq \
         ncdu \
@@ -248,7 +250,7 @@ command -v git &>/dev/null || { echo "need git"; exit 1; }
 
 install_awscli
 install_circleci
-install_fvm
+install_fzf
 install_lazygit
 install_mise
 install_zsh_plugins
