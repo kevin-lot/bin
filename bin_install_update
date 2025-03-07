@@ -150,27 +150,24 @@ install_tfswitch() {
     curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
 }
 install_omz_plugins() {
-    echo "+++++++++ ohmyzsh plugins install +++++++++"
-    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then exit 1; fi
+    echo "+++++++++ zsh plugins install +++++++++"
 
-    local PLUGINS_PATH="${HOME}/.oh-my-zsh/custom/plugins"
+    local ZSH_PATH="${HOME}/.zsh"
+    rm -rf "${ZSH_PATH}/zsh-autosuggestions" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${ZSH_PATH}/zsh-autosuggestions"
 
-    rm -rf "${PLUGINS_PATH}/zsh-autosuggestions" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${PLUGINS_PATH}/zsh-autosuggestions"
+    rm -rf "${ZSH_PATH}/zsh-syntax-highlighting" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_PATH}/zsh-syntax-highlighting"
 
-    rm -rf "${PLUGINS_PATH}/zsh-syntax-highlighting" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${PLUGINS_PATH}/zsh-syntax-highlighting"
-
-    rm -rf "${PLUGINS_PATH}/zsh-completions" &>/dev/null
-    git clone --depth=1 https://github.com/zsh-users/zsh-completions "${PLUGINS_PATH}/zsh-completions"
+    rm -rf "${ZSH_PATH}/zsh-completions" &>/dev/null
+    git clone --depth=1 https://github.com/zsh-users/zsh-completions "${ZSH_PATH}/zsh-completions"
 }
 install_omz_theme() {
-    echo "+++++++++ ohmyzsh theme install +++++++++"
-    if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then exit 1; fi
+    echo "+++++++++ zsh theme install +++++++++"
 
-    local THEMES_PATH="${HOME}/.oh-my-zsh/custom/themes"
-    rm -rf "${THEMES_PATH}/powerlevel10k" &>/dev/null
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${THEMES_PATH}/powerlevel10k"
+    local ZSH_PATH="${HOME}/.zsh"
+    rm -rf "${ZSH_PATH}/powerlevel10k" &>/dev/null
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_PATH}/powerlevel10k"
 
     cat <<"EOF"
     ZSH_THEME="powerlevel10k/powerlevel10k"
