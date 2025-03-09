@@ -95,6 +95,15 @@ install_mise() {
     eval "$(""${HOME}/bin/mise"" hook-env -s zsh)"
 EOF
 }
+install_starship() {
+    if [[ "${OS}" == "darwin" ]]; then
+        brew install starship
+        return
+    fi
+
+    echo "+++++++++ starship install +++++++++"
+    curl -sS https://starship.rs/install.sh | BIN_DIR="${HOME}/bin" sh
+}
 install_terraform_docs() {
     echo "+++++++++ terraform docs install +++++++++"
     if [[ "${OS}" == "darwin" ]]; then
@@ -253,12 +262,13 @@ install_circleci
 install_fzf
 install_lazygit
 install_mise
-install_zsh_plugins
-install_zsh_theme
+install_starship
 install_terraform_docs
 install_terragrunt
 install_tflint
 install_tfswitch
+install_zsh_plugins
+install_zsh_theme
 
 draw_spacer
 

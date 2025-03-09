@@ -11,6 +11,7 @@ circleci
 fzf
 lazygit
 mise
+starship
 terraform-docs
 terragrunt
 tflint
