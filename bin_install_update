@@ -41,6 +41,12 @@ install_circleci() {
         curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
     )
 }
+install_dagger() {
+    echo "+++++++++ dagger install +++++++++"
+    (
+        curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR="${HOME}/bin" sh
+    )
+}
 install_fzf() {
     echo "+++++++++ fzf install +++++++++"
     (
@@ -251,7 +257,8 @@ if [[ "${OS}" == "darwin" ]]; then
 #    brew install \
 #        colima\
 #        docker \
-#        docker-compose
+#        docker-compose \
+#        docker-credential-helper
 fi
 
 draw_spacer
@@ -259,6 +266,7 @@ command -v git &>/dev/null || { echo "need git"; exit 1; }
 
 install_awscli
 install_circleci
+install_dagger
 install_fzf
 install_lazygit
 install_mise

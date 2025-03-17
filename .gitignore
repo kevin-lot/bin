@@ -8,6 +8,7 @@ terraform
 
 # programs installed with bin_install_update
 circleci
+dagger
 fzf
 lazygit
 mise
