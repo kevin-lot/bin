@@ -7,6 +7,8 @@ aws_completer
 terraform
 
 # programs installed with bin_install_update
+act
+actionlint
 circleci
 dagger
 fzf

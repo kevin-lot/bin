@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -o xtrace -o errexit
+#set -o xtrace -o errexit
+set -o errexit
 
 # don't cd before the line below
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -10,8 +11,27 @@ MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the lette
 ZSH_PATH="${HOME}/.zsh"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
+_draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 
+_get_latest_github_release() {
+    local REPO=$1
+    local VERSION
+    for MATCH_SEMVER in "${MATCH_SEMVER_1}" "${MATCH_SEMVER_2}"; do
+        VERSION=$(curl --proto '=https' --tlsv1.2 -fLSs "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E "${MATCH_SEMVER}")
+        [[ -n "${VERSION}" ]] && break
+    done
+    [[ -z "${VERSION}" ]] && { echo "Could not determine version for ${REPO}"; exit 1; }
+    echo "${VERSION}"
+}
+
+install_act() {
+    echo "+++++++++ act install +++++++++"
+    BINDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fSs https://raw.githubusercontent.com/nektos/act/master/install.sh)
+}
+install_actionlint() {
+    echo "+++++++++ actionlint install +++++++++"
+    bash <(curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest "${HOME}/bin"
+}
 install_awscli() {
     echo "+++++++++ awscli install +++++++++"
 
@@ -20,156 +40,152 @@ install_awscli() {
         return
     fi
 
-    # linux
-    (
-        cd "${SCRIPT_DIR}" || exit 1
+    cd "${SCRIPT_DIR}" || exit 1
 
-        SUFFIX_COMMAND=""
-        if command -v aws &>/dev/null; then SUFFIX_COMMAND="--update"; fi
-        rm -rf awscliv2.zip &>/dev/null
-        rm -rf tmp &>/dev/null
-        curl -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
-        unzip -qq awscliv2.zip -d tmp
-        ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
-        rm -rf awscliv2.zip &>/dev/null
-        rm -rf tmp &>/dev/null
-    )
+    SUFFIX_COMMAND=""
+    if command -v aws &>/dev/null; then SUFFIX_COMMAND="--update"; fi
+    rm -rf awscliv2.zip &>/dev/null
+    rm -rf tmp &>/dev/null
+    curl --proto '=https' --tlsv1.2 -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+    unzip -qq awscliv2.zip -d tmp
+    ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
+    rm -rf awscliv2.zip &>/dev/null
+    rm -rf tmp &>/dev/null
 }
 install_circleci() {
     echo "+++++++++ circleci install +++++++++"
-    (
-        curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | DESTDIR="${HOME}/bin" bash
-    )
+    DESTDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh)
 }
 install_dagger() {
     echo "+++++++++ dagger install +++++++++"
-    (
-        curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR="${HOME}/bin" sh
-    )
+    BIN_DIR="${HOME}/bin" sh <(curl --proto '=https' --tlsv1.2 -fLSs https://dl.dagger.io/dagger/install.sh)
 }
 install_fzf() {
     echo "+++++++++ fzf install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-        local VERSION
 
-        rm -rf fzf &>/dev/null
-        VERSION=$(curl -fLSs https://api.github.com/repos/junegunn/fzf/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
-        if [[ "${OS}" == "darwin" ]]; then
-            curl -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-darwin_arm64.tar.gz" -o fzf.tar.gz
-        else
-            curl -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz" -o fzf.tar.gz
-        fi
-        tar xzf fzf.tar.gz fzf
-        chmod a+x fzf
-        rm -f fzf.tar.gz &>/dev/null
-    )
-}
-install_lazygit() {
-    echo "+++++++++ lazygit install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-        local VERSION
-
-        rm -rf lazygit &>/dev/null
-        VERSION=$(curl -fLSs https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_1")
-        if [[ "${OS}" == "darwin" ]]; then
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Darwin_arm64.tar.gz" -o lazygit.tar.gz
-        else
-            curl -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
-        fi
-        tar xzf lazygit.tar.gz lazygit
-        chmod a+x lazygit
-        rm -f lazygit.tar.gz &>/dev/null
-    )
-}
-install_mise() {
-    echo "+++++++++ mise install +++++++++"
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-
-        if [[ "${OS}" == "darwin" ]]; then
-            curl https://mise.jdx.dev/mise-latest-macos-arm64 > ./mise
-        else
-            curl https://mise.jdx.dev/mise-latest-linux-x64 > ./mise
-        fi
-        chmod +x ./mise
-    )
-
-    cat <<"EOF"
-    eval "$(""${HOME}/bin/mise"" activate zsh)"
-    eval "$(""${HOME}/bin/mise"" hook-env -s zsh)"
-EOF
-}
-install_starship() {
     if [[ "${OS}" == "darwin" ]]; then
-        brew install starship
+        brew install fzf
         return
     fi
 
+    cd "${SCRIPT_DIR}" || exit 1
+    local VERSION
+    VERSION=$(_get_latest_github_release "junegunn/fzf")
+
+    rm -rf fzf &>/dev/null
+    curl --proto '=https' --tlsv1.2 -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz" -o fzf.tar.gz
+    tar xzf fzf.tar.gz fzf
+    chmod a+x fzf
+    rm -f fzf.tar.gz &>/dev/null
+}
+install_lazygit() {
+    echo "+++++++++ lazygit install +++++++++"
+
+    if [[ "${OS}" == "darwin" ]]; then
+        brew install lazygit
+        return
+    fi
+
+    cd "${SCRIPT_DIR}" || exit 1
+    local VERSION
+    VERSION=$(_get_latest_github_release jesseduffield/lazygit)
+
+    rm -rf lazygit &>/dev/null
+    curl --proto '=https' --tlsv1.2 -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+    tar xzf lazygit.tar.gz lazygit
+    chmod a+x lazygit
+    rm -f lazygit.tar.gz &>/dev/null
+}
+install_mise() {
+    echo "+++++++++ mise install +++++++++"
+
+    cd "${SCRIPT_DIR}" || exit 1
+    if [[ "${OS}" == "darwin" ]]; then
+        curl --proto '=https' --tlsv1.2 https://mise.jdx.dev/mise-latest-macos-arm64 > ./mise
+    else
+        curl --proto '=https' --tlsv1.2 https://mise.jdx.dev/mise-latest-linux-x64 > ./mise
+    fi
+    chmod +x ./mise
+
+    cat <<"EOF"
+    command -v mise &>/dev/null && {
+        eval "$(mise activate zsh)"
+        eval "$(mise hook-env -s zsh)"
+        rehash
+        LOADED+=("mise")
+    }
+EOF
+}
+install_starship() {
     echo "+++++++++ starship install +++++++++"
-    curl -sS https://starship.rs/install.sh | BIN_DIR="${HOME}/bin" sh
+    BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto '=https' --tlsv1.2 -sS https://starship.rs/install.sh)
 }
 install_terraform_docs() {
     echo "+++++++++ terraform docs install +++++++++"
+
     if [[ "${OS}" == "darwin" ]]; then
         brew install terraform-docs
         return
     fi
 
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-        local VERSION
+    cd "${SCRIPT_DIR}" || exit 1
+    local VERSION
+    VERSION=$(_get_latest_github_release terraform-docs/terraform-docs)
 
-        VERSION=$(curl -fLSs https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
-        rm -rf terraform-docs &>/dev/null
-        curl -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/${VERSION}/terraform-docs-${VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
-        tar xzf terraform-docs.tar.gz terraform-docs
-        chmod +x terraform-docs
-        rm -rf terraform-docs.tar.gz &>/dev/null
-    )
+    rm -rf terraform-docs &>/dev/null
+    curl --proto '=https' --tlsv1.2 -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/v${VERSION}/terraform-docs-v${VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
+    tar xzf terraform-docs.tar.gz terraform-docs
+    chmod +x terraform-docs
+    rm -rf terraform-docs.tar.gz &>/dev/null
+
+    cat <<"EOF"
+    [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
+EOF
 }
 install_terragrunt() {
     echo "+++++++++ terragrunt install +++++++++"
+
     if [[ "${OS}" == "darwin" ]]; then
         brew install terragrunt
         return
     fi
 
-    (
-        cd "${SCRIPT_DIR}" || exit 1
-        local VERSION
+    cd "${SCRIPT_DIR}" || exit 1
+    local VERSION
+    VERSION=$(_get_latest_github_release gruntwork-io/terragrunt)
 
-        VERSION=$(curl -fLSs https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E "$MATCH_SEMVER_2")
-        rm -rf terragrunt &>/dev/null
-        curl -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/terragrunt_linux_amd64" -o terragrunt
-        chmod a+x terragrunt
-    )
+    rm -rf terragrunt &>/dev/null
+    curl --proto '=https' --tlsv1.2 -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/v${VERSION}/terragrunt_linux_amd64" -o terragrunt
+    chmod a+x terragrunt
 
     cat <<"EOF"
-    [[ -d "$TERRAGRUNT_PATH" ]] && complete -o nospace -C "$TERRAGRUNT_PATH" terragrunt
+    [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
 EOF
 }
 install_tflint() {
+    echo "+++++++++ tflint install +++++++++"
+
     if [[ "${OS}" == "darwin" ]]; then
         brew install tflint
         return
     fi
 
-    echo "+++++++++ tflint install +++++++++"
-    curl -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH="${HOME}/bin" bash
+    TFLINT_INSTALL_PATH="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh)
 }
 install_tfswitch() {
+    echo "+++++++++ tfswitch install +++++++++"
+
     if [[ "${OS}" == "darwin" ]]; then
         brew install warrensbox/tap/tfswitch
         return
     fi
 
-    echo "+++++++++ tfswitch install +++++++++"
-    curl -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | BINDIR="${HOME}/bin" bash
+    # not compatible with darwin use brew
+    BINDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh)
 }
 install_zsh_plugins() {
     echo "+++++++++ zsh plugins install +++++++++"
+
     local INSTALL_PATH=""
 
     INSTALL_PATH="${ZSH_PATH}/zsh-autosuggestions"
@@ -184,20 +200,10 @@ install_zsh_plugins() {
     rm -rf "${INSTALL_PATH}" &>/dev/null
     git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
 }
-install_zsh_theme() {
-    echo "+++++++++ zsh theme install +++++++++"
 
-    local INSTALL_PATH=""
-    INSTALL_PATH="${ZSH_PATH}/powerlevel10k"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${INSTALL_PATH}"
-}
-
-# install packages on linux
 if [[ "${OS}" == "linux" ]]; then
     echo "+++++++++ install apt packages +++++++++"
     apt update
-    # common
     apt install --yes \
         bat \
         btop \
@@ -225,17 +231,11 @@ if [[ "${OS}" == "linux" ]]; then
         traceroute
 fi
 if [[ "${OS}" == "darwin" ]]; then
-    # install brew on macos
-    if ! command -v brew &>/dev/null; then
-        echo "+++++++++ install brew +++++++++"
-        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
+    command -v git &>/dev/null || { echo "git is required"; exit 1; }
+    command -v brew &>/dev/null || { echo "brew is required"; exit 1; }
 
-        echo "relaunch the terminal then the script";
-        exit 1;
-    fi
     brew update
     brew upgrade
-    # common
     brew install \
         bat \
         btop \
@@ -243,12 +243,12 @@ if [[ "${OS}" == "darwin" ]]; then
         jq \
         ncdu \
         neovim \
+        nmap \
         pipx \
         python3 \
         scrcpy \
         xmlstarlet \
         yq
-        # nmap \
     # common with diff name
     brew install \
         delta
@@ -261,9 +261,12 @@ if [[ "${OS}" == "darwin" ]]; then
 #        docker-credential-helper
 fi
 
-draw_spacer
-command -v git &>/dev/null || { echo "need git"; exit 1; }
+command -v git &>/dev/null || { echo "git is required"; exit 1; }
 
+_draw_spacer
+
+install_act
+install_actionlint
 install_awscli
 install_circleci
 install_dagger
@@ -276,9 +279,8 @@ install_terragrunt
 install_tflint
 install_tfswitch
 install_zsh_plugins
-install_zsh_theme
 
-draw_spacer
+_draw_spacer
 
 pipx ensurepath
 pipx list
