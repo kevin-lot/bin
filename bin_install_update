@@ -12,6 +12,7 @@ ZSH_PATH="${HOME}/.zsh"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
+_draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
 
 _get_latest_github_release() {
     local REPO=$1
@@ -25,15 +26,15 @@ _get_latest_github_release() {
 }
 
 install_act() {
-    echo "+++++++++ act install +++++++++"
+    _draw_title "act install"
     BINDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fSs https://raw.githubusercontent.com/nektos/act/master/install.sh)
 }
 install_actionlint() {
-    echo "+++++++++ actionlint install +++++++++"
+    _draw_title "actionlint install"
     bash <(curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest "${HOME}/bin"
 }
 install_awscli() {
-    echo "+++++++++ awscli install +++++++++"
+    _draw_title "awscli install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install awscli
@@ -53,15 +54,15 @@ install_awscli() {
     rm -rf tmp &>/dev/null
 }
 install_circleci() {
-    echo "+++++++++ circleci install +++++++++"
+    _draw_title "circleci install"
     DESTDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh)
 }
 install_dagger() {
-    echo "+++++++++ dagger install +++++++++"
+    _draw_title "dagger install"
     BIN_DIR="${HOME}/bin" sh <(curl --proto '=https' --tlsv1.2 -fLSs https://dl.dagger.io/dagger/install.sh)
 }
 install_fzf() {
-    echo "+++++++++ fzf install +++++++++"
+    _draw_title "fzf install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install fzf
@@ -79,7 +80,7 @@ install_fzf() {
     rm -f fzf.tar.gz &>/dev/null
 }
 install_lazygit() {
-    echo "+++++++++ lazygit install +++++++++"
+    _draw_title "lazygit install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install lazygit
@@ -97,7 +98,7 @@ install_lazygit() {
     rm -f lazygit.tar.gz &>/dev/null
 }
 install_mise() {
-    echo "+++++++++ mise install +++++++++"
+    _draw_title "mise install"
 
     cd "${SCRIPT_DIR}" || exit 1
     if [[ "${OS}" == "darwin" ]]; then
@@ -117,11 +118,11 @@ install_mise() {
 EOF
 }
 install_starship() {
-    echo "+++++++++ starship install +++++++++"
+    _draw_title "starship install"
     BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto '=https' --tlsv1.2 -sS https://starship.rs/install.sh)
 }
 install_terraform_docs() {
-    echo "+++++++++ terraform docs install +++++++++"
+    _draw_title "terraform docs install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install terraform-docs
@@ -143,7 +144,7 @@ install_terraform_docs() {
 EOF
 }
 install_terragrunt() {
-    echo "+++++++++ terragrunt install +++++++++"
+    _draw_title "terragrunt install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install terragrunt
@@ -163,7 +164,7 @@ install_terragrunt() {
 EOF
 }
 install_tflint() {
-    echo "+++++++++ tflint install +++++++++"
+    _draw_title "tflint install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install tflint
@@ -173,7 +174,7 @@ install_tflint() {
     TFLINT_INSTALL_PATH="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh)
 }
 install_tfswitch() {
-    echo "+++++++++ tfswitch install +++++++++"
+    _draw_title "tfswitch install"
 
     if [[ "${OS}" == "darwin" ]]; then
         brew install warrensbox/tap/tfswitch
@@ -184,7 +185,7 @@ install_tfswitch() {
     BINDIR="${HOME}/bin" bash <(curl --proto '=https' --tlsv1.2 -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh)
 }
 install_zsh_plugins() {
-    echo "+++++++++ zsh plugins install +++++++++"
+    _draw_title "zsh plugins install"
 
     local INSTALL_PATH=""
 
@@ -202,7 +203,7 @@ install_zsh_plugins() {
 }
 
 if [[ "${OS}" == "linux" ]]; then
-    echo "+++++++++ install apt packages +++++++++"
+    _draw_title "install apt packages"
     apt update
     apt install --yes \
         bat \
