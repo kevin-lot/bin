@@ -13,7 +13,6 @@ circleci
 dagger
 fzf
 lazygit
-mise
 starship
 terraform-docs
 terragrunt
