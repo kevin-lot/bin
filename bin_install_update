@@ -231,7 +231,7 @@ install_awscli
 install_circleci
 install_dagger
 install_fzf
-#install_gh
+install_gh
 install_lazygit
 install_mise
 install_starship
@@ -241,6 +241,9 @@ install_tflint
 install_tfswitch
 install_wiz
 install_zsh_plugins
+#! command -v yamllint &>/dev/null && pipx install yamllint # use mise
+#! command -v poetry &>/dev/null && pipx install poetry
+#! command -v uv &>/dev/null && pipx install uv
 
 _draw_spacer
 
@@ -249,9 +252,6 @@ pipx list
 pipx upgrade-all
 ! command -v awslocal &>/dev/null && pipx install awscli-local
 ! command -v aws-mfa &>/dev/null && pipx install aws-mfa
-! command -v yamllint &>/dev/null && pipx install yamllint
-! command -v poetry &>/dev/null && pipx install poetry
-! command -v uv &>/dev/null && pipx install uv
 
 #cat <<"EOF"
 #    command -v poetry &>/dev/null && {
