@@ -109,41 +109,7 @@ install_zsh_plugins() {
     git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
 }
 
-install_act() {
-    _draw_title "use \"mise install act\""
-}
-install_actionlint() {
-    _draw_title "use \"mise install actionlint\""
-}
-install_awscli() {
-    _draw_title "use \"mise install awscli\""
-}
-install_circleci() {
-    _draw_title "use \"mise install circleci\""
-}
-install_dagger() {
-    _draw_title "use \"mise install dagger\""
-}
-install_gh() {
-    _draw_title "use \"mise install gh\""
-}
-install_terraform_docs() {
-    _draw_title "use \"mise install terraform-docs\""
-
-    cat <<"EOF"
-    [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
-EOF
-}
-install_terragrunt() {
-    _draw_title "use \"mise install terragrunt\""
-
-    cat <<"EOF"
-    [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
-EOF
-}
-install_tflint() {
-    _draw_title "use \"mise install tflint\""
-}
+# wiz is not yet included in mise registry
 install_wiz() {
     _draw_title "wiz install"
 
@@ -221,29 +187,37 @@ if [[ "${OS}" == "darwin" ]]; then
 #        docker-credential-helper
 fi
 
-command -v git &>/dev/null || { echo "git is required"; exit 1; }
+type -p git >/dev/null || { echo "git is required"; exit 1; }
 
-_draw_spacer
-
-install_act
-install_actionlint
-install_awscli
-install_circleci
-install_dagger
 install_fzf
-install_gh
 install_lazygit
 install_mise
 install_starship
-install_terraform_docs
-install_terragrunt
-install_tflint
-install_tfswitch
-install_wiz
 install_zsh_plugins
-#! command -v yamllint &>/dev/null && pipx install yamllint # use mise
-#! command -v poetry &>/dev/null && pipx install poetry
-#! command -v uv &>/dev/null && pipx install uv
+
+type -p mise >/dev/null || { echo "mise is required"; exit 1; }
+
+mise use --global act@latest
+mise use --global actionlint@latest
+mise use --global awscli@latest
+mise use --global circleci@latest
+mise use --global dagger@latest
+mise use --global gh@latest
+mise use --global poetry@latest
+mise use --global terraform-docs@latest && {
+    cat <<"EOF"
+    [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
+EOF
+}
+mise use --global terragrunt@latest && {
+    cat <<"EOF"
+    [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
+EOF
+}
+mise use --global tflint@latest
+mise use --global uv@latest
+mise use --global yamllint@latest
+install_wiz
 
 _draw_spacer
 
