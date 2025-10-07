@@ -26,40 +26,19 @@ _get_latest_github_release() {
 }
 
 install_act() {
-    _draw_title "act install"
-    BINDIR="${HOME}/bin" bash <(curl --proto "=https" --tlsv1.2 -fSs https://raw.githubusercontent.com/nektos/act/master/install.sh)
+    _draw_title "use \"mise install act\""
 }
 install_actionlint() {
-    _draw_title "actionlint install"
-    bash <(curl --proto "=https" --tlsv1.2 https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest "${HOME}/bin"
+    _draw_title "use \"mise install actionlint\""
 }
 install_awscli() {
-    _draw_title "awscli install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install awscli
-        return
-    fi
-
-    cd "${SCRIPT_DIR}" || exit 1
-
-    SUFFIX_COMMAND=""
-    if command -v aws &>/dev/null; then SUFFIX_COMMAND="--update"; fi
-    rm -rf awscliv2.zip &>/dev/null
-    rm -rf tmp &>/dev/null
-    curl --proto "=https" --tlsv1.2 -fLSs https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip
-    unzip -qq awscliv2.zip -d tmp
-    ./tmp/aws/install --bin-dir "${HOME}/bin" --install-dir "${HOME}/.aws/aws-cli" ${SUFFIX_COMMAND}
-    rm -rf awscliv2.zip &>/dev/null
-    rm -rf tmp &>/dev/null
+    _draw_title "use \"mise install awscli\""
 }
 install_circleci() {
-    _draw_title "circleci install"
-    DESTDIR="${HOME}/bin" bash <(curl --proto "=https" --tlsv1.2 -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh)
+    _draw_title "use \"mise install circleci\""
 }
 install_dagger() {
-    _draw_title "dagger install"
-    BIN_DIR="${HOME}/bin" sh <(curl --proto "=https" --tlsv1.2 -fLSs https://dl.dagger.io/dagger/install.sh)
+    _draw_title "use \"mise install dagger\""
 }
 install_fzf() {
     _draw_title "fzf install"
@@ -80,25 +59,7 @@ install_fzf() {
     rm -f fzf.tar.gz &>/dev/null
 }
 install_gh() {
-    _draw_title "gh install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install gh
-        return
-    fi
-
-    (
-        type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)
-        type -p gpg >/dev/null || (sudo apt update && sudo apt-get install gpg -y)
-        sudo install -dm 755 /etc/apt/keyrings
-        out=$(mktemp)
-        wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg
-        cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
-        sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt update
-        sudo apt install gh -y
-    )
+    _draw_title "use \"mise install gh\""
 }
 install_lazygit() {
     _draw_title "lazygit install"
@@ -149,67 +110,21 @@ install_starship() {
     BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto "=https" --tlsv1.2 -sS https://starship.rs/install.sh)
 }
 install_terraform_docs() {
-    _draw_title "terraform docs install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install terraform-docs
-        return
-    fi
-
-    cd "${SCRIPT_DIR}" || exit 1
-    local VERSION
-    VERSION=$(_get_latest_github_release "terraform-docs/terraform-docs")
-
-    rm -rf terraform-docs &>/dev/null
-    curl --proto "=https" --tlsv1.2 -fLSs "https://github.com/terraform-docs/terraform-docs/releases/download/v${VERSION}/terraform-docs-v${VERSION}-linux-amd64.tar.gz" -o terraform-docs.tar.gz
-    tar xzf terraform-docs.tar.gz terraform-docs
-    chmod a+x ./terraform-docs
-    rm -rf terraform-docs.tar.gz &>/dev/null
+    _draw_title "use \"mise install terraform-docs\""
 
     cat <<"EOF"
     [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
 EOF
 }
 install_terragrunt() {
-    _draw_title "terragrunt install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install terragrunt
-        return
-    fi
-
-    cd "${SCRIPT_DIR}" || exit 1
-    local VERSION
-    VERSION=$(_get_latest_github_release "gruntwork-io/terragrunt")
-
-    rm -rf terragrunt &>/dev/null
-    curl --proto "=https" --tlsv1.2 -fLSs "https://github.com/gruntwork-io/terragrunt/releases/download/v${VERSION}/terragrunt_linux_amd64" -o terragrunt
-    chmod a+x ./terragrunt
+    _draw_title "use \"mise install terragrunt\""
 
     cat <<"EOF"
     [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
 EOF
 }
 install_tflint() {
-    _draw_title "tflint install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install tflint
-        return
-    fi
-
-    TFLINT_INSTALL_PATH="${HOME}/bin" bash <(curl --proto "=https" --tlsv1.2 -fLSs https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh)
-}
-install_tfswitch() {
-    _draw_title "tfswitch install"
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install warrensbox/tap/tfswitch
-        return
-    fi
-
-    # not compatible with darwin use brew
-    BINDIR="${HOME}/bin" bash <(curl --proto "=https" --tlsv1.2 -fLSs https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh)
+    _draw_title "use \"mise install tflint\""
 }
 install_wiz() {
     _draw_title "wiz install"
