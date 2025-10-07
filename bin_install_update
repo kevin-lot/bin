@@ -13,7 +13,6 @@ OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
-
 _get_latest_github_release() {
     local REPO=$1
     local VERSION
@@ -25,21 +24,6 @@ _get_latest_github_release() {
     echo "${VERSION}"
 }
 
-install_act() {
-    _draw_title "use \"mise install act\""
-}
-install_actionlint() {
-    _draw_title "use \"mise install actionlint\""
-}
-install_awscli() {
-    _draw_title "use \"mise install awscli\""
-}
-install_circleci() {
-    _draw_title "use \"mise install circleci\""
-}
-install_dagger() {
-    _draw_title "use \"mise install dagger\""
-}
 install_fzf() {
     _draw_title "fzf install"
 
@@ -57,9 +41,6 @@ install_fzf() {
     tar xzf fzf.tar.gz fzf
     chmod a+x ./fzf
     rm -f fzf.tar.gz &>/dev/null
-}
-install_gh() {
-    _draw_title "use \"mise install gh\""
 }
 install_lazygit() {
     _draw_title "lazygit install"
@@ -109,6 +90,43 @@ install_starship() {
     _draw_title "starship install"
     BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto "=https" --tlsv1.2 -sS https://starship.rs/install.sh)
 }
+install_zsh_plugins() {
+    _draw_title "zsh plugins install"
+
+    [[ -d "${ZSH_PATH}" ]] || install -d -m 700 "${ZSH_PATH}"
+    local INSTALL_PATH=""
+
+    INSTALL_PATH="${ZSH_PATH}/zsh-autosuggestions"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${INSTALL_PATH}"
+
+    INSTALL_PATH="${ZSH_PATH}/zsh-syntax-highlighting"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${INSTALL_PATH}"
+
+    INSTALL_PATH="${ZSH_PATH}/zsh-history-substring-search"
+    rm -rf "${INSTALL_PATH}" &>/dev/null
+    git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
+}
+
+install_act() {
+    _draw_title "use \"mise install act\""
+}
+install_actionlint() {
+    _draw_title "use \"mise install actionlint\""
+}
+install_awscli() {
+    _draw_title "use \"mise install awscli\""
+}
+install_circleci() {
+    _draw_title "use \"mise install circleci\""
+}
+install_dagger() {
+    _draw_title "use \"mise install dagger\""
+}
+install_gh() {
+    _draw_title "use \"mise install gh\""
+}
 install_terraform_docs() {
     _draw_title "use \"mise install terraform-docs\""
 
@@ -139,24 +157,6 @@ install_wiz() {
         curl --proto "=https" --tlsv1.2 -fLSs https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64 --output wizcli
     fi
     chmod a+x ./wizcli
-}
-install_zsh_plugins() {
-    _draw_title "zsh plugins install"
-
-    [[ -d "${ZSH_PATH}" ]] || install -d -m 700 "${ZSH_PATH}"
-    local INSTALL_PATH=""
-
-    INSTALL_PATH="${ZSH_PATH}/zsh-autosuggestions"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${INSTALL_PATH}"
-
-    INSTALL_PATH="${ZSH_PATH}/zsh-syntax-highlighting"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${INSTALL_PATH}"
-
-    INSTALL_PATH="${ZSH_PATH}/zsh-history-substring-search"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
 }
 
 if [[ "${OS}" == "linux" ]]; then
