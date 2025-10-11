@@ -63,7 +63,7 @@ install_lazygit() {
 install_mise() {
     _draw_title "mise install"
 
-    if type -p mise >/dev/null; then
+    if type -p mise 1>/dev/null; then
        return;
     fi
 
@@ -149,8 +149,6 @@ if [[ "${OS}" == "linux" ]]; then
         ncdu \
         neovim  \
         nmap \
-        pipx \
-        python3 \
         scrcpy \
         xmlstarlet \
         yq
@@ -161,8 +159,8 @@ if [[ "${OS}" == "linux" ]]; then
         ngrok
 fi
 if [[ "${OS}" == "darwin" ]]; then
-    command -v git &>/dev/null || { echo "git is required"; exit 1; }
-    command -v brew &>/dev/null || { echo "brew is required"; exit 1; }
+    type -p git 1>/dev/null || { echo "git is required"; exit 1; }
+    type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     _draw_title "install brew packages"
     brew update && brew upgrade
     # common
@@ -174,8 +172,6 @@ if [[ "${OS}" == "darwin" ]]; then
         ncdu \
         neovim \
         nmap \
-        pipx \
-        python3 \
         scrcpy \
         xmlstarlet \
         yq
@@ -192,7 +188,7 @@ if [[ "${OS}" == "darwin" ]]; then
 #        docker-credential-helper
 fi
 
-type -p git >/dev/null || { echo "git is required"; exit 1; }
+type -p git 1>/dev/null || { echo "git is required"; exit 1; }
 
 install_fzf
 install_lazygit
@@ -202,7 +198,7 @@ install_zsh_plugins
 
 _draw_spacer
 
-type -p mise >/dev/null || { echo "mise is required"; exit 1; }
+type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
 mise use --global act@latest
 mise use --global actionlint@latest
@@ -232,17 +228,7 @@ install_wiz
 
 _draw_spacer
 
-pipx ensurepath
-pipx list
-pipx upgrade-all
-! command -v awslocal &>/dev/null && pipx install awscli-local
-! command -v aws-mfa &>/dev/null && pipx install aws-mfa
-
-#cat <<"EOF"
-#    command -v poetry &>/dev/null && {
-#        eval "$(mise activate zsh)"
-#        eval "$(mise hook-env -s zsh)"
-#        rehash
-#        LOADED+=("mise")
-#    }
-#EOF
+#pipx ensurepath
+#pipx list
+#pipx upgrade-all
+#! command -v aws-mfa 1>/dev/null && pipx install aws-mfa
