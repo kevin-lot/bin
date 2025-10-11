@@ -63,6 +63,10 @@ install_lazygit() {
 install_mise() {
     _draw_title "mise install"
 
+    if type -p mise >/dev/null; then
+       return;
+    fi
+
     if [[ "${OS}" == "darwin" ]]; then
         brew install mise
     else
@@ -136,6 +140,7 @@ if [[ "${OS}" == "linux" ]]; then
         rpi-imager \
         terminator \
         traceroute
+    # common
     apt install --yes \
         bat \
         btop \
@@ -158,9 +163,9 @@ fi
 if [[ "${OS}" == "darwin" ]]; then
     command -v git &>/dev/null || { echo "git is required"; exit 1; }
     command -v brew &>/dev/null || { echo "brew is required"; exit 1; }
-
-    brew update
-    brew upgrade
+    _draw_title "install brew packages"
+    brew update && brew upgrade
+    # common
     brew install \
         bat \
         btop \
