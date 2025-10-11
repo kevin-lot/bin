@@ -211,6 +211,7 @@ mise use --global circleci@latest
 mise use --global dagger@latest
 mise use --global gh@latest
 mise use --global poetry@latest
+mise use --global terraform@latest
 mise use --global terraform-docs@latest && {
     cat <<"EOF"
     [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
