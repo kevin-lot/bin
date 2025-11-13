@@ -206,6 +206,7 @@ mise use --global awscli@latest
 mise use --global circleci@latest
 mise use --global dagger@latest
 mise use --global gh@latest
+mise use --global node@latest
 mise use --global poetry@latest
 mise use --global terraform@latest
 mise use --global terraform-docs@latest && {

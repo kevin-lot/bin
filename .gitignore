@@ -7,17 +7,10 @@ aws_completer
 terraform
 
 # programs installed with bin_install_update
-act
-actionlint
-circleci
-dagger
 fzf
 lazygit
 starship
-terraform-docs
-terragrunt
-tflint
-tfswitch
+wizcli
 
 # programs that can be installed from an other way
 docker
