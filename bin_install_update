@@ -146,8 +146,8 @@ if [[ "${OS}" == "linux" ]]; then
         btop \
         git \
         jq \
+        micro \
         ncdu \
-        neovim  \
         nmap \
         scrcpy \
         xmlstarlet \
@@ -169,8 +169,8 @@ if [[ "${OS}" == "darwin" ]]; then
         btop \
         git \
         jq \
+        micro \
         ncdu \
-        neovim \
         nmap \
         scrcpy \
         xmlstarlet \
@@ -195,6 +195,7 @@ install_lazygit
 install_mise
 install_starship
 install_zsh_plugins
+install_wiz
 
 _draw_spacer
 
@@ -222,10 +223,6 @@ EOF
 mise use --global tflint@latest
 mise use --global uv@latest
 mise use --global yamllint@latest
-
-_draw_spacer
-
-install_wiz
 
 _draw_spacer
 
