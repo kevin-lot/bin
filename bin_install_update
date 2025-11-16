@@ -163,6 +163,9 @@ if [[ "${OS}" == "darwin" ]]; then
     type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     _draw_title "install brew packages"
     brew update && brew upgrade
+
+    # curl -fsSL https://cargo-lambda.info/install.sh | sh
+
     # common
     brew install \
         bat \
@@ -181,6 +184,8 @@ if [[ "${OS}" == "darwin" ]]; then
         jmespath/jmespath/jp
         # ngrok/ngrok/ngrok \
     # macos only
+    brew install --cask ghostty
+    brew install --cask kitty
 #    brew install \
 #        colima\
 #        docker \
