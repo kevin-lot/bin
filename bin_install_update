@@ -10,6 +10,12 @@ MATCH_SEMVER_1='s/.*v([^v].+)".*/\1/' # match when semver starts with the letter
 MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the letter "v"
 ZSH_PATH="${HOME}/.zsh"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+if [[ "${OS}" == "linux" ]]; then
+    OS=$(uname -n | tr '[:upper:]' '[:lower:]')
+fi
+
+type -p git 1>/dev/null || { echo "git is required"; exit 1; }
+type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
@@ -27,11 +33,6 @@ _get_latest_github_release() {
 install_fzf() {
     _draw_title "fzf install"
 
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install fzf
-        return
-    fi
-
     cd "${SCRIPT_DIR}" || exit 1
     local VERSION
     VERSION=$(_get_latest_github_release "junegunn/fzf")
@@ -45,11 +46,6 @@ install_fzf() {
 install_lazygit() {
     _draw_title "lazygit install"
 
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install lazygit
-        return
-    fi
-
     cd "${SCRIPT_DIR}" || exit 1
     local VERSION
     VERSION=$(_get_latest_github_release "jesseduffield/lazygit")
@@ -62,25 +58,17 @@ install_lazygit() {
 }
 install_mise() {
     _draw_title "mise install"
+    if type -p mise 1>/dev/null; then return; fi
 
-    if type -p mise 1>/dev/null; then
-       return;
-    fi
-
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install mise
-    else
-        (
-            type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)
-            type -p gpg >/dev/null || (sudo apt update && sudo apt-get install gpg -y)
-            sudo install -dm 755 /etc/apt/keyrings
-            wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor | sudo tee /etc/apt/keyrings/mise-archive-keyring.gpg 1> /dev/null
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list > /dev/null
-            sudo apt update
-            sudo apt install -y mise
-        )
-    fi
-
+    type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)
+    type -p gpg >/dev/null || (sudo apt update && sudo apt-get install gpg -y)
+    sudo install -dm 755 /etc/apt/keyrings
+    wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor | sudo tee /etc/apt/keyrings/mise-archive-keyring.gpg 1> /dev/null
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list > /dev/null
+    sudo apt update
+    sudo apt install -y mise
+}
+show_message_mise() {
     cat <<"EOF"
     command -v mise &>/dev/null && {
         eval "$(mise activate zsh)"
@@ -92,6 +80,7 @@ EOF
 }
 install_starship() {
     _draw_title "starship install"
+
     BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto "=https" --tlsv1.2 -sS https://starship.rs/install.sh)
 }
 install_zsh_plugins() {
@@ -117,29 +106,75 @@ install_zsh_plugins() {
 install_wiz() {
     _draw_title "wiz install"
 
-    if [[ "${OS}" == "darwin" ]]; then
-        brew install --cask wizcli
-        return
-    fi
-
     cd "${SCRIPT_DIR}" || exit 1
-    if [[ "${OS}" == "linux" ]]; then
-        curl --proto "=https" --tlsv1.2 -fLSs https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64 --output wizcli
-    fi
+    curl --proto "=https" --tlsv1.2 -fLSs https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64 --output wizcli
     chmod a+x ./wizcli
 }
 
-if [[ "${OS}" == "linux" ]]; then
-    _draw_title "install apt packages"
-    apt update
+if [[ "${OS}" == "fedora" ]]; then
+    _draw_title "install dnf packages"
+    sudo dnf update
     # linux only
-    apt install --yes \
-        build-essential \
+    sudo dnf install --assumeyes \
+        make \
+        automake \
+        gcc \
+        gcc-c++ \
+        kernel-devel \
+        \
         dconf-editor \
         gparted \
         rpi-imager \
         terminator \
         traceroute
+    # install_wiz
+
+    # common
+    sudo dnf install --assumeyes \
+        bat \
+        btop \
+        git \
+        jq \
+        micro \
+        ncdu \
+        nmap \
+        xmlstarlet \
+        yq
+
+    sudo dnf copr --assumeyes enable dejan/lazygit
+    sudo dnf copr --assumeyes enable jdxcode/mise
+    sudo dnf copr --assumeyes enable atim/starship
+    sudo dnf copr --assumeyes enable zeno/scrcpy
+    sudo dnf install --assumeyes \
+        fzf \
+        lazygit \
+        mise \
+        starship\
+        scrcpy
+    show_message_mise
+
+    # common with diff name
+    sudo dnf install --assumeyes \
+        git-delta
+        # ngrok
+        # jp \ # jmespath
+fi
+
+if [[ "${OS}" == "linuxmint" ]]; then
+    _draw_title "install apt packages"
+    apt update && apt upgrade
+
+    # linuxmint only
+    apt install --yes \
+        build-essential \
+        \
+        dconf-editor \
+        gparted \
+        rpi-imager \
+        terminator \
+        traceroute
+    #install_wiz
+
     # common
     apt install --yes \
         bat \
@@ -149,9 +184,15 @@ if [[ "${OS}" == "linux" ]]; then
         micro \
         ncdu \
         nmap \
-        scrcpy \
         xmlstarlet \
         yq
+    install_fzf
+    install_lazygit
+    install_mise
+    show_message_mise
+    install_starship
+    apt install --yes scrcpy
+
     # common with diff name
     apt install --yes \
         git-delta \
@@ -159,12 +200,14 @@ if [[ "${OS}" == "linux" ]]; then
         ngrok
 fi
 if [[ "${OS}" == "darwin" ]]; then
-    type -p git 1>/dev/null || { echo "git is required"; exit 1; }
-    type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     _draw_title "install brew packages"
+    type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     brew update && brew upgrade
 
-    # curl -fsSL https://cargo-lambda.info/install.sh | sh
+    # macos only
+    brew install --cask ghostty
+    brew install --cask kitty
+    brew install --cask wizcli
 
     # common
     brew install \
@@ -175,17 +218,23 @@ if [[ "${OS}" == "darwin" ]]; then
         micro \
         ncdu \
         nmap \
-        scrcpy \
         xmlstarlet \
         yq
+
+    brew install fzf \
+        lazygit \
+        mise \
+        starship \
+        scrcpy
+    show_message_mise
+
     # common with diff name
     brew install \
         delta \
         jmespath/jmespath/jp
         # ngrok/ngrok/ngrok \
-    # macos only
-    brew install --cask ghostty
-    brew install --cask kitty
+
+    # curl -fsSL https://cargo-lambda.info/install.sh | sh
 #    brew install \
 #        colima\
 #        docker \
@@ -193,18 +242,9 @@ if [[ "${OS}" == "darwin" ]]; then
 #        docker-credential-helper
 fi
 
-type -p git 1>/dev/null || { echo "git is required"; exit 1; }
-
-install_fzf
-install_lazygit
-install_mise
-install_starship
 install_zsh_plugins
-install_wiz
 
 _draw_spacer
-
-type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
 mise use --global act@latest
 mise use --global actionlint@latest
