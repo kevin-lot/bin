@@ -30,19 +30,6 @@ _get_latest_github_release() {
     echo "${VERSION}"
 }
 
-install_fzf() {
-    _draw_title "fzf install"
-
-    cd "${SCRIPT_DIR}" || exit 1
-    local VERSION
-    VERSION=$(_get_latest_github_release "junegunn/fzf")
-
-    rm -rf fzf &>/dev/null
-    curl --proto "=https" --tlsv1.2 -fLSs "https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz" --output fzf.tar.gz
-    tar xzf fzf.tar.gz fzf
-    chmod a+x ./fzf
-    rm -f fzf.tar.gz &>/dev/null
-}
 install_lazygit() {
     _draw_title "lazygit install"
 
@@ -146,7 +133,6 @@ if [[ "${OS}" == "fedora" ]]; then
     sudo dnf copr --assumeyes enable atim/starship
     sudo dnf copr --assumeyes enable zeno/scrcpy
     sudo dnf install --assumeyes \
-        fzf \
         lazygit \
         mise \
         starship\
@@ -186,7 +172,6 @@ if [[ "${OS}" == "linuxmint" ]]; then
         nmap \
         xmlstarlet \
         yq
-    install_fzf
     install_lazygit
     install_mise
     show_message_mise
@@ -221,7 +206,7 @@ if [[ "${OS}" == "darwin" ]]; then
         xmlstarlet \
         yq
 
-    brew install fzf \
+    brew install \
         lazygit \
         mise \
         starship \
