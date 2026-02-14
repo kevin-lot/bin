@@ -102,48 +102,28 @@ if [[ "${OS}" == "fedora" ]]; then
     _draw_title "install dnf packages"
     sudo dnf update
     # linux only
-    sudo dnf install --assumeyes \
-        make \
-        automake \
-        gcc \
-        gcc-c++ \
-        kernel-devel \
-        \
-        dconf-editor \
-        gparted \
-        rpi-imager \
-        terminator \
-        traceroute
-    # install_wiz
-
-    # common
-    sudo dnf install --assumeyes \
-        bat \
-        btop \
-        git \
-        jq \
-        micro \
-        ncdu \
-        nmap \
-        xmlstarlet \
-        yq
+    sudo dnf install --assumeyes                                                                  \
+        make                           automake                       gcc                         \
+        gcc-c++                        kernel-devel                                               \
+                                                                                                  \
+        dconf-editor                   gparted                        rpi-imager                  \
+        terminator                     traceroute
+        # install_wiz
+        # ngrok
 
     sudo dnf copr --assumeyes enable dejan/lazygit
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
     sudo dnf copr --assumeyes enable zeno/scrcpy
-    sudo dnf install --assumeyes \
-        lazygit \
-        mise \
-        starship\
-        scrcpy
-    show_message_mise
 
-    # common with diff name
-    sudo dnf install --assumeyes \
-        git-delta
-        # ngrok
-        # jp \ # jmespath
+    # common
+    sudo dnf install --assumeyes                                                                  \
+        bat                            btop                           git                         \
+        git-delta                      jq                             lazygit                     \
+        micro                          mise                           ncdu                        \
+        nmap                           scrcpy                         starship                    \
+        xmlstarlet                     yq
+    show_message_mise
 fi
 
 if [[ "${OS}" == "linuxmint" ]]; then
@@ -151,39 +131,27 @@ if [[ "${OS}" == "linuxmint" ]]; then
     apt update && apt upgrade
 
     # linuxmint only
-    apt install --yes \
-        build-essential \
-        \
-        dconf-editor \
-        gparted \
-        rpi-imager \
-        terminator \
-        traceroute
-    #install_wiz
+    apt install --yes                                                                             \
+        build-essential                                                                           \
+                                                                                                  \
+        dconf-editor                   gparted                       rpi-imager                   \
+        terminator                     traceroute
+        #install_wiz
+        #ngrok
 
     # common
-    apt install --yes \
-        bat \
-        btop \
-        git \
-        jq \
-        micro \
-        ncdu \
-        nmap \
-        xmlstarlet \
-        yq
+    apt install --yes                                                                             \
+        bat                            btop                           git                         \
+        git-delta                      jq                                                         \
+        micro                                                         ncdu                        \
+        nmap                           scrcpy                                                     \
+        xmlstarlet                     yq
     install_lazygit
     install_mise
     show_message_mise
     install_starship
-    apt install --yes scrcpy
-
-    # common with diff name
-    apt install --yes \
-        git-delta \
-        jp \
-        ngrok
 fi
+
 if [[ "${OS}" == "darwin" ]]; then
     _draw_title "install brew packages"
     type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
@@ -195,36 +163,17 @@ if [[ "${OS}" == "darwin" ]]; then
     brew install --cask wizcli
 
     # common
-    brew install \
-        bat \
-        btop \
-        git \
-        jq \
-        micro \
-        ncdu \
-        nmap \
-        xmlstarlet \
-        yq
-
-    brew install \
-        lazygit \
-        mise \
-        starship \
-        scrcpy
+    brew install                                                                                  \
+        bat                            btop                           git                         \
+        git-delta                      jq                             lazygit                     \
+        micro                          mise                           ncdu                        \
+        nmap                           scrcpy                         starship                    \
+        xmlstarlet                     yq
     show_message_mise
 
-    # common with diff name
-    brew install \
-        delta \
-        jmespath/jmespath/jp
-        # ngrok/ngrok/ngrok \
-
-    # curl -fsSL https://cargo-lambda.info/install.sh | sh
-#    brew install \
-#        colima\
-#        docker \
-#        docker-compose \
-#        docker-credential-helper
+#    brew install                                                                                  \
+#         colima                        docker                         docker-compose              \
+#         docker-credential-helper
 fi
 
 install_zsh_plugins
@@ -237,6 +186,7 @@ mise use --global awscli@latest
 mise use --global circleci@latest
 mise use --global dagger@latest
 mise use --global gh@latest
+mise use --global jmespath@latest
 mise use --global node@latest
 mise use --global poetry@latest
 mise use --global terraform@latest
