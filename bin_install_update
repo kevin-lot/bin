@@ -30,19 +30,6 @@ _get_latest_github_release() {
     echo "${VERSION}"
 }
 
-install_lazygit() {
-    _draw_title "lazygit install"
-
-    cd "${SCRIPT_DIR}" || exit 1
-    local VERSION
-    VERSION=$(_get_latest_github_release "jesseduffield/lazygit")
-
-    rm -rf lazygit &>/dev/null
-    curl --proto "=https" --tlsv1.2 -fLSs "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Linux_x86_64.tar.gz" --output lazygit.tar.gz
-    tar xzf lazygit.tar.gz lazygit
-    chmod a+x ./lazygit
-    rm -f lazygit.tar.gz &>/dev/null
-}
 install_mise() {
     _draw_title "mise install"
     if type -p mise 1>/dev/null; then return; fi
@@ -118,7 +105,6 @@ if [[ "${OS}" == "fedora" ]]; then
 
     # common
     sudo dnf install --assumeyes \
-        bat \
         btop \
         git \
         jq \
@@ -128,12 +114,10 @@ if [[ "${OS}" == "fedora" ]]; then
         xmlstarlet \
         yq
 
-    sudo dnf copr --assumeyes enable dejan/lazygit
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
     sudo dnf copr --assumeyes enable zeno/scrcpy
     sudo dnf install --assumeyes \
-        lazygit \
         mise \
         starship\
         scrcpy
@@ -163,7 +147,6 @@ if [[ "${OS}" == "linuxmint" ]]; then
 
     # common
     apt install --yes \
-        bat \
         btop \
         git \
         jq \
@@ -172,7 +155,6 @@ if [[ "${OS}" == "linuxmint" ]]; then
         nmap \
         xmlstarlet \
         yq
-    install_lazygit
     install_mise
     show_message_mise
     install_starship
@@ -191,12 +173,10 @@ if [[ "${OS}" == "darwin" ]]; then
 
     # macos only
     brew install --cask ghostty
-    brew install --cask kitty
     brew install --cask wizcli
 
     # common
     brew install \
-        bat \
         btop \
         git \
         jq \
@@ -207,7 +187,6 @@ if [[ "${OS}" == "darwin" ]]; then
         yq
 
     brew install \
-        lazygit \
         mise \
         starship \
         scrcpy
@@ -234,9 +213,11 @@ _draw_spacer
 mise use --global act@latest
 mise use --global actionlint@latest
 mise use --global awscli@latest
+mise use --global bat@latest
 mise use --global circleci@latest
 mise use --global dagger@latest
 mise use --global gh@latest
+mise use --global lazygit@latest
 mise use --global node@latest
 mise use --global poetry@latest
 mise use --global terraform@latest
