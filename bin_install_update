@@ -6,8 +6,6 @@ set -o errexit
 # don't cd before the line below
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-MATCH_SEMVER_1='s/.*v([^v].+)".*/\1/' # match when semver starts with the letter "v"
-MATCH_SEMVER_2='s/.*"([^"].+)".*/\1/' # match when semver doesn't have the letter "v"
 ZSH_PLUGINS_PATH="${HOME}/.zsh_plugins"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 if [[ "${OS}" == "linux" ]]; then
@@ -19,17 +17,6 @@ type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
-_get_latest_github_release() {
-    local REPO=$1
-    local VERSION
-    for MATCH_SEMVER in "${MATCH_SEMVER_1}" "${MATCH_SEMVER_2}"; do
-        VERSION=$(curl --proto "=https" --tlsv1.2 -fLSs "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E "${MATCH_SEMVER}")
-        [[ -n "${VERSION}" ]] && break
-    done
-    [[ -z "${VERSION}" ]] && { echo "Could not determine version for ${REPO}"; exit 1; }
-    echo "${VERSION}"
-}
-
 add_mise_repo() {
     _draw_title "add mise apt repo"
     if type -p mise 1>/dev/null; then return; fi
@@ -93,15 +80,14 @@ if [[ "${OS}" == "fedora" ]]; then
     sudo dnf copr --assumeyes enable zeno/scrcpy
     sudo dnf update
 
-    PACKAGES=(
-        # fedora
+    FEDORA_PACKAGES=(
         make
         automake
         gcc
         gcc-c++
         kernel-devel
-
-        # linux
+    )
+    LINUX_PACKAGES=(
         dconf-editor
         gparted
         rpi-imager
@@ -109,8 +95,8 @@ if [[ "${OS}" == "fedora" ]]; then
         traceroute
         #install_wiz
         #ngrok
-
-        # common
+    )
+    COMMON_PACKAGES=(
         btop
         git
         git-delta
@@ -124,8 +110,7 @@ if [[ "${OS}" == "fedora" ]]; then
         xmlstarlet
         yq
     )
-    sudo dnf install --assumeyes "${PACKAGES[@]}"
-
+    sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${LINUX_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
     show_message_mise
 fi
 
@@ -134,10 +119,10 @@ if [[ "${OS}" == "linuxmint" ]]; then
     add_mise_repo
     apt update && apt upgrade
 
-    PACKAGES=(
-        # linuxmint
+    LINUXMINT_PACKAGES=(
         build-essential
-
+    )
+    LINUX_PACKAGES=(
         # linux
         dconf-editor
         gparted
@@ -146,8 +131,8 @@ if [[ "${OS}" == "linuxmint" ]]; then
         traceroute
         #install_wiz
         #ngrok
-
-        # common
+    )
+    COMMON_PACKAGES=(
         btop
         git
         git-delta
@@ -161,7 +146,7 @@ if [[ "${OS}" == "linuxmint" ]]; then
         xmlstarlet
         yq
     )
-    apt install --yes "${PACKAGES[@]}"
+    apt install --yes "${LINUXMINT_PACKAGES[@]}" "${LINUX_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
     show_message_mise
     install_starship
 fi
@@ -172,14 +157,12 @@ if [[ "${OS}" == "darwin" ]]; then
     brew update && brew upgrade
 
     CASK_PACKAGES=(
-        # macos
         ghostty
         wizcli
     )
     brew install --cask "${CASK_PACKAGES[@]}"
 
-    PACKAGES=(
-        # common
+    COMMON_PACKAGES=(
         btop
         git
         git-delta
@@ -193,11 +176,10 @@ if [[ "${OS}" == "darwin" ]]; then
         xmlstarlet
         yq
     )
-    brew install "${PACKAGES[@]}"
+    brew install "${COMMON_PACKAGES[@]}"
     #    brew install                                                                                  \
     #         colima                        docker                         docker-compose              \
     #         docker-credential-helper
-
     show_message_mise
 fi
 
