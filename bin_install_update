@@ -45,7 +45,10 @@ install_mise() {
 show_message_mise() {
     cat <<"EOF"
     command -v mise &>/dev/null && {
+        # keep this activation order
+        eval "$(mise activate zsh --shims)"
         eval "$(mise activate zsh)"
+
         eval "$(mise hook-env -s zsh)"
         rehash
         LOADED+=("mise")
