@@ -169,6 +169,7 @@ mise use --global circleci@latest
 mise use --global claude@latest
 mise use --global dagger@latest
 mise use --global flutter@latest
+mise use --global gemini@latest
 mise use --global gh@latest
 mise use --global jmespath@latest
 mise use --global lazygit@latest
