@@ -30,17 +30,15 @@ _get_latest_github_release() {
     echo "${VERSION}"
 }
 
-install_mise() {
-    _draw_title "mise install"
+add_mise_repo() {
+    _draw_title "add mise apt repo"
     if type -p mise 1>/dev/null; then return; fi
+    if grep -q "mise.jdx.dev/deb" /etc/apt/sources.list.d/mise.list 2>/dev/null; then return; fi
 
-    type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)
-    type -p gpg >/dev/null || (sudo apt update && sudo apt-get install gpg -y)
+    type -p curl >/dev/null || (sudo apt update -y && sudo apt install -y curl)
     sudo install -dm 755 /etc/apt/keyrings
-    wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor | sudo tee /etc/apt/keyrings/mise-archive-keyring.gpg 1> /dev/null
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list > /dev/null
-    sudo apt update
-    sudo apt install -y mise
+    curl -fSs https://mise.jdx.dev/gpg-key.pub | sudo tee /etc/apt/keyrings/mise-archive-keyring.asc 1> /dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.asc] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
 }
 show_message_mise() {
     cat <<"EOF"
@@ -90,50 +88,80 @@ install_wiz() {
 
 if [[ "${OS}" == "fedora" ]]; then
     _draw_title "install dnf packages"
-    sudo dnf update
-    # linux only
-    sudo dnf install --assumeyes                                                                  \
-        make                           automake                       gcc                         \
-        gcc-c++                        kernel-devel                                               \
-                                                                                                  \
-        dconf-editor                   gparted                        rpi-imager                  \
-        terminator                     traceroute
-        # install_wiz
-        # ngrok
-
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
     sudo dnf copr --assumeyes enable zeno/scrcpy
+    sudo dnf update
 
-    # common
-    sudo dnf install --assumeyes                                                                  \
-        btop                           git                            git-delta                   \
-        jq                             micro                          mise                        \
-        ncdu                           nmap                           scrcpy                      \
-        starship                       xmlstarlet                     yq
+    PACKAGES=(
+        # fedora
+        make
+        automake
+        gcc
+        gcc-c++
+        kernel-devel
+
+        # linux
+        dconf-editor
+        gparted
+        rpi-imager
+        terminator
+        traceroute
+        #install_wiz
+        #ngrok
+
+        # common
+        btop
+        git
+        git-delta
+        jq
+        micro
+        mise
+        ncdu
+        nmap
+        scrcpy
+        starship
+        xmlstarlet
+        yq
+    )
+    sudo dnf install --assumeyes "${PACKAGES[@]}"
+
     show_message_mise
 fi
 
 if [[ "${OS}" == "linuxmint" ]]; then
     _draw_title "install apt packages"
+    add_mise_repo
     apt update && apt upgrade
 
-    # linuxmint only
-    apt install --yes                                                                             \
-        build-essential                                                                           \
-                                                                                                  \
-        dconf-editor                   gparted                       rpi-imager                   \
-        terminator                     traceroute
+    PACKAGES=(
+        # linuxmint
+        build-essential
+
+        # linux
+        dconf-editor
+        gparted
+        rpi-imager
+        terminator
+        traceroute
         #install_wiz
         #ngrok
 
-    # common
-    apt install --yes                                                                             \
-        btop                           git                            git-delta                   \
-        jq                             micro                                                      \
-        ncdu                           nmap                           scrcpy                      \
-                                       xmlstarlet                     yq
-    install_mise
+        # common
+        btop
+        git
+        git-delta
+        jq
+        micro
+        mise
+        ncdu
+        nmap
+        scrcpy
+        # starship not on ubuntu package, wait for the last linuxmint
+        xmlstarlet
+        yq
+    )
+    apt install --yes "${PACKAGES[@]}"
     show_message_mise
     install_starship
 fi
@@ -143,21 +171,34 @@ if [[ "${OS}" == "darwin" ]]; then
     type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     brew update && brew upgrade
 
-    # macos only
-    brew install --cask ghostty
-    brew install --cask wizcli
+    CASK_PACKAGES=(
+        # macos
+        ghostty
+        wizcli
+    )
+    brew install --cask "${CASK_PACKAGES[@]}"
 
-    # common
-    brew install                                                                                  \
-        btop                           git                            git-delta                   \
-        jq                             micro                          mise                        \
-        ncdu                           nmap                           scrcpy                      \
-        starship                       xmlstarlet                     yq
+    PACKAGES=(
+        # common
+        btop
+        git
+        git-delta
+        jq
+        micro
+        mise
+        ncdu
+        nmap
+        scrcpy
+        starship
+        xmlstarlet
+        yq
+    )
+    brew install "${PACKAGES[@]}"
+    #    brew install                                                                                  \
+    #         colima                        docker                         docker-compose              \
+    #         docker-credential-helper
+
     show_message_mise
-
-#    brew install                                                                                  \
-#         colima                        docker                         docker-compose              \
-#         docker-credential-helper
 fi
 
 install_zsh_plugins
