@@ -187,6 +187,12 @@ install_zsh_plugins
 
 _draw_spacer
 
+mise use --global aqua:rtk-ai/rtk && {
+    cat <<"EOF"
+    rtk init --global
+    rtk init --global --gemini
+EOF
+}
 mise use --global act@latest
 mise use --global actionlint@latest
 mise use --global awscli@latest
