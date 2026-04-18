@@ -187,12 +187,6 @@ install_zsh_plugins
 
 _draw_spacer
 
-mise use --global aqua:rtk-ai/rtk && {
-    cat <<"EOF"
-    rtk init --global
-    rtk init --global --gemini
-EOF
-}
 mise use --global act@latest
 mise use --global actionlint@latest
 mise use --global awscli@latest
@@ -201,23 +195,26 @@ mise use --global circleci@latest
 mise use --global claude@latest
 mise use --global dagger@latest
 mise use --global flutter@latest
-mise use --global gemini@latest
 mise use --global gh@latest
 mise use --global jmespath@latest
 mise use --global lazygit@latest
 mise use --global node@latest
 mise use --global poetry@latest
+mise use --global rtk@latest && {
+    cat <<"EOF"
+    rtk init --global
+    rtk init --global --gemini
+EOF
+}
 mise use --global rust@latest && {
     cat <<"EOF"
     rustup component list --installed
     cargo install --list
 
     rustup component add rust-analyzer
-
-    cargo install cargo-binstall
-    cargo binstall cargo-cache
-    cargo binstall cargo-lambda
-    cargo binstall cargo-watch
+    cargo install cargo-cache
+    cargo install cargo-lambda
+    cargo install cargo-watch
 EOF
 }
 mise use --global terraform@latest
