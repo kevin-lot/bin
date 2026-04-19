@@ -12,22 +12,9 @@ if [[ "${OS}" == "linux" ]]; then
     OS=$(uname -n | tr '[:upper:]' '[:lower:]')
 fi
 
-type -p git 1>/dev/null || { echo "git is required"; exit 1; }
-type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
-
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
-add_mise_repo() {
-    _draw_title "add mise apt repo"
-    if type -p mise 1>/dev/null; then return; fi
-    if grep -q "mise.jdx.dev/deb" /etc/apt/sources.list.d/mise.list 2>/dev/null; then return; fi
-
-    type -p curl >/dev/null || (sudo apt update -y && sudo apt install -y curl)
-    sudo install -dm 755 /etc/apt/keyrings
-    curl -fSs https://mise.jdx.dev/gpg-key.pub | sudo tee /etc/apt/keyrings/mise-archive-keyring.asc 1> /dev/null
-    echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.asc] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
-}
-show_message_mise() {
+_show_message_mise() {
     cat <<"EOF"
     command -v mise &>/dev/null && {
         # keep this activation order
@@ -40,13 +27,9 @@ show_message_mise() {
     }
 EOF
 }
-install_starship() {
-    _draw_title "starship install"
-
-    BIN_DIR="${HOME}/bin" FORCE=1 sh <(curl --proto "=https" --tlsv1.2 -sS https://starship.rs/install.sh)
-}
-install_zsh_plugins() {
+_install_zsh_plugins() {
     _draw_title "zsh plugins install"
+    type -p git 1>/dev/null || { echo "git is required"; exit 1; }
 
     [[ -d "${ZSH_PLUGINS_PATH}" ]] || install -d -m 700 "${ZSH_PLUGINS_PATH}"
     local INSTALL_PATH=""
@@ -111,44 +94,7 @@ if [[ "${OS}" == "fedora" ]]; then
         yq
     )
     sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${LINUX_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
-    show_message_mise
-fi
-
-if [[ "${OS}" == "linuxmint" ]]; then
-    _draw_title "install apt packages"
-    add_mise_repo
-    apt update && apt upgrade
-
-    LINUXMINT_PACKAGES=(
-        build-essential
-    )
-    LINUX_PACKAGES=(
-        # linux
-        dconf-editor
-        gparted
-        rpi-imager
-        terminator
-        traceroute
-        #install_wiz
-        #ngrok
-    )
-    COMMON_PACKAGES=(
-        btop
-        git
-        git-delta
-        jq
-        micro
-        mise
-        ncdu
-        nmap
-        scrcpy
-        # starship not on ubuntu package, wait for the last linuxmint
-        xmlstarlet
-        yq
-    )
-    apt install --yes "${LINUXMINT_PACKAGES[@]}" "${LINUX_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
-    show_message_mise
-    install_starship
+    _show_message_mise
 fi
 
 if [[ "${OS}" == "darwin" ]]; then
@@ -180,13 +126,14 @@ if [[ "${OS}" == "darwin" ]]; then
     #    brew install                                                                                  \
     #         colima                        docker                         docker-compose              \
     #         docker-credential-helper
-    show_message_mise
+    _show_message_mise
 fi
 
-install_zsh_plugins
+_install_zsh_plugins
 
 _draw_spacer
 
+type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 mise use --global act@latest
 mise use --global actionlint@latest
 mise use --global awscli@latest
@@ -234,7 +181,4 @@ mise use --global yamllint@latest
 
 _draw_spacer
 
-#pipx ensurepath
-#pipx list
-#pipx upgrade-all
-#! command -v aws-mfa 1>/dev/null && pipx install aws-mfa
+# cargo install aws-mfa
