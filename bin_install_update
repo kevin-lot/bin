@@ -136,7 +136,7 @@ _draw_spacer
 type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 mise use --global act@latest
 mise use --global actionlint@latest
-mise use --global awscli@latest
+mise use --global aws-cli@latest
 mise use --global bat@latest
 mise use --global circleci@latest
 mise use --global claude@latest
@@ -150,7 +150,6 @@ mise use --global poetry@latest
 mise use --global rtk@latest && {
     cat <<"EOF"
     rtk init --global
-    rtk init --global --gemini
 EOF
 }
 mise use --global rust@latest && {
