@@ -40,11 +40,32 @@ _show_message_mise_tools() {
     [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
 EOF
 }
-_show_message_colima() {
-    cat <<"EOF"
-    # once: in ~/.docker/config.json, so docker finds the brew compose/buildx plugins
-    "cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]
-EOF
+_setup_docker_cli() {
+    # docker only looks in ~/.docker/cli-plugins: point it to the brew compose/buildx plugins
+
+    local docker_path="${HOME}/.docker"
+    local docker_config_path="${docker_path}/config.json"
+
+    _draw_title "docker cli setup"
+
+    [[ -d "${docker_path}" ]] || install -d -m 700 "${docker_path}"
+    [[ -s "${docker_config_path}" ]] || echo '{}' > "${docker_config_path}"
+    # plutil (built into macos) edits the json in place, keeping other keys (auths, credsStore...)
+    plutil -replace cliPluginsExtraDirs -json "[\"$(brew --prefix)/lib/docker/cli-plugins\"]" "${docker_config_path}"
+}
+_setup_colima() {
+    # run the docker engine in a colima VM, started at login by brew services
+
+    _draw_title "colima setup"
+
+    # first run only: create the VM (vz + rosetta for amd64 images, sized for localstack + test containers; builds run on macos),
+    # then stop it so brew services owns it
+    if ! colima list --json 2>/dev/null | grep -q '"default"'; then
+        colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4 --disk 100
+        colima stop
+    fi
+    # start now and at login
+    brew services start colima
 }
 _install_zsh_plugins() {
     _draw_title "zsh plugins install"
