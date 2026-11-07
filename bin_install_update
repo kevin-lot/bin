@@ -72,7 +72,7 @@ fi
 EOF
 }
 _setup_mise_tools() {
-    # install or update global mise tools to latest, show the ones that fail
+    # install missing global mise tools, upgrade the installed ones, show the ones that fail
 
     local mise_tools=(
         act
@@ -109,6 +109,8 @@ _setup_mise_tools() {
     for tool in "${mise_tools[@]}"; do
         mise use --global "${tool}@latest" || failed+=("${tool}")
     done
+    # use only installs: upgrade the installed ones (rust included), old versions are pruned
+    mise upgrade --yes || failed+=("(upgrade)")
 
     # shown, not returned: the next steps (rust) must still run
     (( ${#failed[@]} == 0 )) || echo "mise failed for: ${failed[*]}"
@@ -172,7 +174,8 @@ if [[ "${OS}" == "fedora" ]]; then
     _draw_title "dnf packages setup"
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
-    sudo dnf update --assumeyes
+    # --refresh: fresh metadata, so mise/starship from copr are upgraded too
+    sudo dnf upgrade --assumeyes --refresh
 
     FEDORA_PACKAGES=(
         automake
@@ -188,6 +191,10 @@ if [[ "${OS}" == "fedora" ]]; then
         #ngrok
     )
     sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
+
+    _draw_title "flatpak setup"
+    # no sudo: updates system and user installations
+    flatpak update --assumeyes --noninteractive
 fi
 
 if [[ "${OS}" == "darwin" ]]; then
