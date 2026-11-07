@@ -10,24 +10,11 @@ if [[ "${OS}" == "linux" ]]; then
     # distro id, e.g. "fedora"
     OS=$(. /etc/os-release && echo "${ID}")
 fi
-# filled by _install_mise_tools, reported at the end: a failing tool must not stop the next steps
+# filled by _setup_mise_tools, reported at the end: a failing tool must not stop the next steps
 MISE_FAILED_TOOLS=()
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
-_show_message_mise() {
-    cat <<"EOF"
-    command -v mise &>/dev/null && {
-        # keep this activation order
-        eval "$(mise activate zsh --shims)"
-        eval "$(mise activate zsh)"
-
-        eval "$(mise hook-env -s zsh)"
-        rehash
-        LOADED+=("mise")
-    }
-EOF
-}
 _setup_docker_cli() {
     # docker only looks in ~/.docker/cli-plugins: point it to the brew compose/buildx plugins
 
@@ -80,7 +67,7 @@ _install_zsh_plugins() {
         git clone --quiet "${url}" "${install_path}"
     done
 }
-_install_mise_tools() {
+_setup_mise_tools() {
     # install or update global mise tools to latest, failing ones go to MISE_FAILED_TOOLS
 
     local mise_tools=(
@@ -110,7 +97,7 @@ _install_mise_tools() {
     )
     local tool
 
-    _draw_title "mise tools install"
+    _draw_title "mise tools setup"
     type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
     # one call per tool: a failing tool must not block the others
@@ -149,7 +136,7 @@ COMMON_PACKAGES=(
 )
 
 if [[ "${OS}" == "fedora" ]]; then
-    _draw_title "install dnf packages"
+    _draw_title "dnf packages setup"
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
     sudo dnf update --assumeyes
@@ -168,11 +155,10 @@ if [[ "${OS}" == "fedora" ]]; then
         #ngrok
     )
     sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
-    _show_message_mise
 fi
 
 if [[ "${OS}" == "darwin" ]]; then
-    _draw_title "install brew packages"
+    _draw_title "brew packages setup"
     type -p brew 1>/dev/null || { echo "brew is required"; exit 1; }
     brew update && brew upgrade
 
@@ -190,16 +176,18 @@ if [[ "${OS}" == "darwin" ]]; then
         docker-credential-helper
     )
     brew install "${COMMON_PACKAGES[@]}" "${DOCKER_PACKAGES[@]}"
+    # call order matters (not alphabetical): plugins dir before the VM
     _setup_docker_cli
     _setup_colima
-    _show_message_mise
 fi
 
-_install_zsh_plugins
+_setup_zsh_plugins
 
 _draw_spacer
 
-_install_mise_tools
+# call order matters (not alphabetical): zsh file, then tools, then rust extras on top of mise rust
+_setup_mise
+_setup_mise_tools
 _setup_rust
 
 _draw_spacer
