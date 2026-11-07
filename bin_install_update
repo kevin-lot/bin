@@ -87,7 +87,6 @@ _setup_mise_tools() {
         jmespath
         jq
         lazygit
-        mole
         node
         poetry
         rust
@@ -116,20 +115,32 @@ _setup_mise_tools() {
     (( ${#failed[@]} == 0 )) || echo "mise failed for: ${failed[*]}"
 }
 _setup_rust() {
-    # rust extras on top of mise rust: rust-analyzer for IDEs, cargo tools (cargo install also updates them)
+    # rust extras on top of mise rust: rust-analyzer for IDEs, cargo tools as mise tools (mise upgrade updates them)
+    # after _setup_mise_tools, not in its list: the cargo backend needs rust installed first
 
     local cargo_tools=(
         cargo-cache
         cargo-lambda
         cargo-watch
     )
+    local tool
+    local failed=()
 
     _draw_title "rust setup"
     # mise exec: mise is not activated in this script, rust failing is already shown by _setup_mise_tools
     mise which cargo &>/dev/null || { echo "rust is missing: skipped"; return 0; }
 
     mise exec -- rustup component add rust-analyzer
-    mise exec -- cargo install --locked "${cargo_tools[@]}"
+    # binstall first: the mise cargo backend then downloads prebuilt binaries instead of compiling
+    mise use --global cargo-binstall@latest || failed+=("cargo-binstall")
+    for tool in "${cargo_tools[@]}"; do
+        mise use --global "cargo:${tool}@latest" || failed+=("cargo:${tool}")
+    done
+    # after cargo-cache install: drop the unpacked crate sources (~/.cargo/registry/src), rebuilt from the archives when needed
+    mise exec -- cargo cache --autoclean || failed+=("cargo cache")
+
+    # shown, not returned: same as _setup_mise_tools
+    (( ${#failed[@]} == 0 )) || echo "mise failed for: ${failed[*]}"
 }
 _setup_zsh_plugins() {
     # clone missing zsh plugins, update existing ones (sourced by ~/.dotfiles zshrc.main)
@@ -207,6 +218,9 @@ if [[ "${OS}" == "darwin" ]]; then
         wizcli
     )
     brew install --cask "${CASK_PACKAGES[@]}"
+    DARWIN_PACKAGES=(
+        mole
+    )
     # docker engine runs in the colima VM, docker is only the CLI
     DOCKER_PACKAGES=(
         colima
@@ -215,7 +229,7 @@ if [[ "${OS}" == "darwin" ]]; then
         docker-compose
         docker-credential-helper
     )
-    brew install "${COMMON_PACKAGES[@]}" "${DOCKER_PACKAGES[@]}"
+    brew install "${COMMON_PACKAGES[@]}" "${DARWIN_PACKAGES[@]}" "${DOCKER_PACKAGES[@]}"
     _setup_docker_cli
     _setup_colima
 fi
