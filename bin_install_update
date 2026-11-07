@@ -51,23 +51,23 @@ _install_zsh_plugins() {
     type -p git 1>/dev/null || { echo "git is required"; exit 1; }
 
     [[ -d "${ZSH_PLUGINS_PATH}" ]] || install -d -m 700 "${ZSH_PLUGINS_PATH}"
-    local INSTALL_PATH=""
 
-    INSTALL_PATH="${ZSH_PLUGINS_PATH}/zsh-autosuggestions"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "${INSTALL_PATH}"
-
-    INSTALL_PATH="${ZSH_PLUGINS_PATH}/zsh-syntax-highlighting"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${INSTALL_PATH}"
-
-    INSTALL_PATH="${ZSH_PLUGINS_PATH}/zsh-history-substring-search"
-    rm -rf "${INSTALL_PATH}" &>/dev/null
-    git clone https://github.com/zsh-users/zsh-history-substring-search "${INSTALL_PATH}"
+    local zsh_plugins=(
+        https://github.com/zsh-users/zsh-autosuggestions.git
+        https://github.com/zsh-users/zsh-syntax-highlighting.git
+        https://github.com/zsh-users/zsh-history-substring-search.git
+    )
+    local url install_path
+    for url in "${zsh_plugins[@]}"; do
+        install_path="${ZSH_PLUGINS_PATH}/$(basename "${url}" .git)"
+        if [[ -d "${install_path}/.git" ]]; then
+            git -C "${install_path}" pull --quiet --ff-only
+            continue
+        fi
+        rm -rf "${install_path}"
+        git clone --quiet "${url}" "${install_path}"
+    done
 }
-
-# wiz is not yet included in mise registry
-install_wiz() {
 _install_mise_tools() {
     _draw_title "mise tools install"
     type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
@@ -111,6 +111,17 @@ _install_mise_tools() {
     fi
 }
 
+# shared by fedora and darwin
+COMMON_PACKAGES=(
+    btop
+    git
+    git-delta
+    micro
+    mise
+    ncdu
+    nmap
+    starship
+    xmlstarlet
     )
 
 if [[ "${OS}" == "fedora" ]]; then
