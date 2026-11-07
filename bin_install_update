@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
+# install or update my machines: professional macbook (darwin), personal computer (fedora)
 
 #set -o xtrace -o errexit
 set -o errexit
 
-# don't cd before the line below
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
 ZSH_PLUGINS_PATH="${HOME}/.zsh_plugins"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 if [[ "${OS}" == "linux" ]]; then
-    OS=$(uname -n | tr '[:upper:]' '[:lower:]')
+    # distro id, e.g. "fedora"
+    OS=$(. /etc/os-release && echo "${ID}")
 fi
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
@@ -25,6 +24,26 @@ _show_message_mise() {
         rehash
         LOADED+=("mise")
     }
+EOF
+}
+_show_message_mise_tools() {
+    cat <<"EOF"
+    rustup component list --installed
+    cargo install --list
+
+    rustup component add rust-analyzer
+    cargo install cargo-cache
+    cargo install cargo-lambda
+    cargo install cargo-watch
+
+    [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
+    [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
+EOF
+}
+_show_message_colima() {
+    cat <<"EOF"
+    # once: in ~/.docker/config.json, so docker finds the brew compose/buildx plugins
+    "cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]
 EOF
 }
 _install_zsh_plugins() {
