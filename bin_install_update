@@ -157,24 +157,18 @@ if [[ "${OS}" == "darwin" ]]; then
         wizcli
     )
     brew install --cask "${CASK_PACKAGES[@]}"
-
-    COMMON_PACKAGES=(
-        btop
-        git
-        git-delta
-        micro
-        mise
-        ncdu
-        nmap
-        scrcpy
-        starship
-        xmlstarlet
+    # docker engine runs in the colima VM, docker is only the CLI
+    DOCKER_PACKAGES=(
+        colima
+        docker
+        docker-buildx
+        docker-compose
+        docker-credential-helper
     )
-    brew install "${COMMON_PACKAGES[@]}"
-    #    brew install                                                                                  \
-    #         colima                        docker                         docker-compose              \
-    #         docker-credential-helper
+    brew install "${COMMON_PACKAGES[@]}" "${DOCKER_PACKAGES[@]}"
+    _setup_colima
     _show_message_mise
+    _show_message_colima
 fi
 
 _install_zsh_plugins
