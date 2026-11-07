@@ -128,38 +128,22 @@ if [[ "${OS}" == "fedora" ]]; then
     _draw_title "install dnf packages"
     sudo dnf copr --assumeyes enable jdxcode/mise
     sudo dnf copr --assumeyes enable atim/starship
-    sudo dnf copr --assumeyes enable zeno/scrcpy
-    sudo dnf update
+    sudo dnf update --assumeyes
 
     FEDORA_PACKAGES=(
-        make
         automake
+        dconf-editor
         gcc
         gcc-c++
-        kernel-devel
-    )
-    LINUX_PACKAGES=(
-        dconf-editor
         gparted
+        kernel-devel
+        make
         rpi-imager
         terminator
         traceroute
-        #install_wiz
         #ngrok
     )
-    COMMON_PACKAGES=(
-        btop
-        git
-        git-delta
-        micro
-        mise
-        ncdu
-        nmap
-        scrcpy
-        starship
-        xmlstarlet
-    )
-    sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${LINUX_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
+    sudo dnf install --assumeyes "${FEDORA_PACKAGES[@]}" "${COMMON_PACKAGES[@]}"
     _show_message_mise
 fi
 
