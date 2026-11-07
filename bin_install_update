@@ -28,20 +28,6 @@ _show_message_mise() {
     }
 EOF
 }
-_show_message_mise_tools() {
-    cat <<"EOF"
-    rustup component list --installed
-    cargo install --list
-
-    rustup component add rust-analyzer
-    cargo install cargo-cache
-    cargo install cargo-lambda
-    cargo install cargo-watch
-
-    [[ -f "${BIN_PATH}/bin/terraform-docs" ]] && eval "$(terraform-docs completion zsh)"
-    [[ -f "${BIN_PATH}/bin/terragrunt" ]] && complete -o nospace -C "${BIN_PATH}/bin/terragrunt" terragrunt
-EOF
-}
 _setup_docker_cli() {
     # docker only looks in ~/.docker/cli-plugins: point it to the brew compose/buildx plugins
 
@@ -132,11 +118,21 @@ _install_mise_tools() {
         mise use --global "${tool}@latest" || MISE_FAILED_TOOLS+=("${tool}")
     done
 }
-    _show_message_mise_tools
-    if (( ${#failed[@]} > 0 )); then
-        echo "mise failed for: ${failed[*]}"
-        return 1
-    fi
+_setup_rust() {
+    # rust extras on top of mise rust: rust-analyzer for IDEs, cargo tools (cargo install also updates them)
+
+    local cargo_tools=(
+        cargo-cache
+        cargo-lambda
+        cargo-watch
+    )
+
+    _draw_title "rust setup"
+    # mise exec: mise is not activated in this script, rust failing is already in MISE_FAILED_TOOLS
+    mise which cargo &>/dev/null || { echo "rust is missing: skipped"; return 0; }
+
+    mise exec -- rustup component add rust-analyzer
+    mise exec -- cargo install --locked "${cargo_tools[@]}"
 }
 
 # shared by fedora and darwin
@@ -204,6 +200,7 @@ _install_zsh_plugins
 _draw_spacer
 
 _install_mise_tools
+_setup_rust
 
 _draw_spacer
 
