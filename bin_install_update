@@ -68,10 +68,7 @@ _setup_colima() {
     brew services start colima
 }
 _install_zsh_plugins() {
-    _draw_title "zsh plugins install"
-    type -p git 1>/dev/null || { echo "git is required"; exit 1; }
-
-    [[ -d "${ZSH_PLUGINS_PATH}" ]] || install -d -m 700 "${ZSH_PLUGINS_PATH}"
+    # clone missing zsh plugins, update existing ones (sourced by ~/.dotfiles zshrc.main)
 
     local zsh_plugins=(
         https://github.com/zsh-users/zsh-autosuggestions.git
@@ -79,6 +76,12 @@ _install_zsh_plugins() {
         https://github.com/zsh-users/zsh-history-substring-search.git
     )
     local url install_path
+
+    _draw_title "zsh plugins install"
+    type -p git 1>/dev/null || { echo "git is required"; exit 1; }
+
+    [[ -d "${ZSH_PLUGINS_PATH}" ]] || install -d -m 700 "${ZSH_PLUGINS_PATH}"
+
     for url in "${zsh_plugins[@]}"; do
         install_path="${ZSH_PLUGINS_PATH}/$(basename "${url}" .git)"
         if [[ -d "${install_path}/.git" ]]; then
@@ -90,8 +93,7 @@ _install_zsh_plugins() {
     done
 }
 _install_mise_tools() {
-    _draw_title "mise tools install"
-    type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
+    # install or update global mise tools to latest, report the ones that fail
 
     local mise_tools=(
         act
@@ -118,9 +120,13 @@ _install_mise_tools() {
         yamllint
         yq
     )
-    # one call per tool: a failing tool must not block the others
     local tool
     local failed=()
+
+    _draw_title "mise tools install"
+    type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
+
+    # one call per tool: a failing tool must not block the others
     for tool in "${mise_tools[@]}"; do
         mise use --global "${tool}@latest" || failed+=("${tool}")
     done
@@ -143,7 +149,7 @@ COMMON_PACKAGES=(
     nmap
     starship
     xmlstarlet
-    )
+)
 
 if [[ "${OS}" == "fedora" ]]; then
     _draw_title "install dnf packages"
@@ -187,9 +193,9 @@ if [[ "${OS}" == "darwin" ]]; then
         docker-credential-helper
     )
     brew install "${COMMON_PACKAGES[@]}" "${DOCKER_PACKAGES[@]}"
+    _setup_docker_cli
     _setup_colima
     _show_message_mise
-    _show_message_colima
 fi
 
 _install_zsh_plugins
