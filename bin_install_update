@@ -10,6 +10,8 @@ if [[ "${OS}" == "linux" ]]; then
     # distro id, e.g. "fedora"
     OS=$(. /etc/os-release && echo "${ID}")
 fi
+# filled by _install_mise_tools, reported at the end: a failing tool must not stop the next steps
+MISE_FAILED_TOOLS=()
 
 _draw_spacer() { echo "+++++++++ +++++++++ +++++++++ +++++++++"; echo; echo; }
 _draw_title() { echo "+++++++++ ${1} +++++++++"; echo; echo; }
@@ -93,7 +95,7 @@ _install_zsh_plugins() {
     done
 }
 _install_mise_tools() {
-    # install or update global mise tools to latest, report the ones that fail
+    # install or update global mise tools to latest, failing ones go to MISE_FAILED_TOOLS
 
     local mise_tools=(
         act
@@ -121,16 +123,15 @@ _install_mise_tools() {
         yq
     )
     local tool
-    local failed=()
 
     _draw_title "mise tools install"
     type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
     # one call per tool: a failing tool must not block the others
     for tool in "${mise_tools[@]}"; do
-        mise use --global "${tool}@latest" || failed+=("${tool}")
+        mise use --global "${tool}@latest" || MISE_FAILED_TOOLS+=("${tool}")
     done
-
+}
     _show_message_mise_tools
     if (( ${#failed[@]} > 0 )); then
         echo "mise failed for: ${failed[*]}"
@@ -205,5 +206,7 @@ _draw_spacer
 _install_mise_tools
 
 _draw_spacer
+
+(( ${#MISE_FAILED_TOOLS[@]} == 0 )) || { echo "mise failed for: ${MISE_FAILED_TOOLS[*]}"; exit 1; }
 
 # cargo install aws-mfa
