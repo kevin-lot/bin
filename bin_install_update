@@ -68,12 +68,50 @@ _install_zsh_plugins() {
 
 # wiz is not yet included in mise registry
 install_wiz() {
-    _draw_title "wiz install"
+_install_mise_tools() {
+    _draw_title "mise tools install"
+    type -p mise 1>/dev/null || { echo "mise is required"; exit 1; }
 
-    cd "${SCRIPT_DIR}" || exit 1
-    curl --proto "=https" --tlsv1.2 -fLSs https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64 --output wizcli
-    chmod a+x ./wizcli
+    local mise_tools=(
+        act
+        actionlint
+        aws-cli
+        bat
+        circleci
+        claude
+        dagger
+        flutter
+        gh
+        jmespath
+        jq
+        lazygit
+        mole
+        node
+        poetry
+        rust
+        terraform
+        terraform-docs
+        terragrunt
+        tflint
+        uv
+        yamllint
+        yq
+    )
+    # one call per tool: a failing tool must not block the others
+    local tool
+    local failed=()
+    for tool in "${mise_tools[@]}"; do
+        mise use --global "${tool}@latest" || failed+=("${tool}")
+    done
+
+    _show_message_mise_tools
+    if (( ${#failed[@]} > 0 )); then
+        echo "mise failed for: ${failed[*]}"
+        return 1
+    fi
 }
+
+    )
 
 if [[ "${OS}" == "fedora" ]]; then
     _draw_title "install dnf packages"
